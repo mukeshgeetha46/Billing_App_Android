@@ -26,7 +26,7 @@ const PRODUCTS = [
         price: 45.00,
         unit: 'unit',
         minOrder: 10,
-        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D',
+        image: require('@/assets/images/sum_lap.png'),
         tag: 'NEW',
         tagColor: '#2563EB',
     },
@@ -36,7 +36,7 @@ const PRODUCTS = [
         price: 89.99,
         unit: 'unit',
         minOrder: 5,
-        image: 'https://images.unsplash.com/photo-1558002038-10912cba1d26?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHNtYXJ0JTIwaG9tZXxlbnwwfHwwfHx8MA%3D%3D',
+        image: require('@/assets/images/dell_lap.jpeg'),
     },
     {
         id: '3',
@@ -44,7 +44,7 @@ const PRODUCTS = [
         price: 22.50,
         unit: 'unit',
         minOrder: 20,
-        image: 'https://images.unsplash.com/photo-1507473888900-52e1ad142751?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8bGFtcHxlbnwwfHwwfHx8MA%3D%3D',
+        image: require('@/assets/images/air.jpg'),
         tag: 'SALE',
         tagColor: '#EF4444',
     },
@@ -54,7 +54,7 @@ const PRODUCTS = [
         price: 65.00,
         unit: 'unit',
         minOrder: 5,
-        image: 'https://images.unsplash.com/photo-1587829741301-351d454eb85c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGtleWJvYXJkfGVufDB8fDB8fHww',
+        image: require('@/assets/images/bluair.jpg'),
     },
     {
         id: '5',
@@ -62,7 +62,7 @@ const PRODUCTS = [
         price: 15.75,
         unit: 'unit',
         minOrder: 50,
-        image: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cG93ZXIlMjBiYW5rfGVufDB8fDB8fHww',
+        image: require('@/assets/images/mouse.jpg'),
     },
     {
         id: '6',
@@ -70,7 +70,7 @@ const PRODUCTS = [
         price: 35.00,
         unit: 'unit',
         minOrder: 10,
-        image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c3BlYWtlcnxlbnwwfHwwfHx8MA%3D%3D',
+        image: require('@/assets/images/soap.webp'),
         isSoldOut: true,
     },
 ];
@@ -85,7 +85,7 @@ export default function PartnerCatalogScreen() {
     const renderProductItem = ({ item }: { item: typeof PRODUCTS[0] }) => (
         <View style={styles.productCard}>
             <View style={styles.imageContainer}>
-                <Image source={{ uri: item.image }} style={styles.productImage} resizeMode="cover" />
+                <Image source={item.image} style={styles.productImage} resizeMode="contain" />
                 {item.tag && (
                     <View style={[styles.tagBadge, { backgroundColor: item.tagColor }]}>
                         <Text style={styles.tagText}>{item.tag}</Text>

@@ -1,7 +1,7 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, ImageSourcePropType, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Type definitions
@@ -10,18 +10,19 @@ type Partner = {
   name: string;
   color: string;
   icon?: string;
+  image?: ImageSourcePropType;
 };
 
 const featuredPartners: Partner[] = [
-  { id: '1', name: 'Global Foods', color: '#2E5C55' },
-  { id: '2', name: 'TechSupply', color: '#277C6B' },
-  { id: '3', name: 'GreenDistro', color: '#7DA645' },
-  { id: '4', name: 'Urban Wholesale', color: '#1B3B48' },
-  { id: '5', name: 'Elite Goods', color: '#E8D3A8', icon: 'leaf' },
-  { id: '6', name: 'Pro Distro', color: '#1B3B48' },
-  { id: '7', name: 'Metro Supplies', color: '#F2E8CF' },
-  { id: '8', name: 'Niche Imports', color: '#F7F4F2' },
-  { id: '9', name: 'Value Partners', color: '#2E5C55' },
+  { id: '1', name: 'Sumsung', color: '#2E5C55', image: require('@/assets/images/sumsung.png') },
+  { id: '2', name: 'Boat', color: '#277C6B', image: require('@/assets/images/boat.png') },
+  { id: '3', name: 'Zebronics', color: '#7DA645', image: require('@/assets/images/zeb.png') },
+  { id: '4', name: 'Surf Excel', color: '#1B3B48', image: require('@/assets/images/surf1.jpeg') },
+  { id: '5', name: 'Xiomi', color: '#E8D3A8', icon: 'leaf', image: require('@/assets/images/vim.jpeg') },
+  { id: '6', name: 'Lifebuoy', color: '#1B3B48', image: require('@/assets/images/life1.jpeg') },
+  { id: '7', name: 'Dell', color: '#F2E8CF', image: require('@/assets/images/dell.png') },
+  { id: '8', name: 'Acer', color: '#F7F4F2', image: require('@/assets/images/acer.png') },
+  { id: '9', name: 'LG', color: '#2E5C55', image: require('@/assets/images/lg.png') },
 ];
 
 export default function HomeScreen() {
@@ -34,11 +35,9 @@ export default function HomeScreen() {
       activeOpacity={0.7}
     >
       <View style={styles.partnerCard}>
-        <View style={[styles.partnerLogo, { backgroundColor: item.color }]}>
+        <View style={[styles.partnerLogo]}>
           {/* Placeholder for logo - using first letter or icon if we were more advanced */}
-          <Text style={[styles.partnerLogoText, { color: item.color === '#F7F4F2' || item.color === '#E8D3A8' || item.color === '#F2E8CF' ? '#333' : '#FFF' }]}>
-            {item.name.substring(0, 1)}
-          </Text>
+          <Image source={item.image} style={styles.partnerLogo} resizeMode="contain" />
         </View>
       </View>
       <Text style={styles.partnerName} numberOfLines={1}>{item.name}</Text>

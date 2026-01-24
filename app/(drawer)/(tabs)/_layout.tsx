@@ -1,7 +1,6 @@
-import { Tabs } from 'expo-router';
+import { MaterialTopTabs } from '@/components/MaterialTopTabs';
 import React from 'react';
 
-import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -10,41 +9,52 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <Tabs
+    <MaterialTopTabs
+      tabBarPosition="bottom"
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
+        tabBarInactiveTintColor: 'gray',
+        tabBarIndicatorStyle: { height: 0 },
+        tabBarStyle: {
+          height: 60,
+          paddingBottom: 10,
+          backgroundColor: Colors[colorScheme ?? 'light'].background,
+          borderTopWidth: 1,
+          borderTopColor: Colors[colorScheme ?? 'light'].icon,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          textTransform: 'none',
+        },
       }}>
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="index"
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="orders"
         options={{
           title: 'Orders',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="doc.text.fill" color={color} />,
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="sales"
         options={{
           title: 'Sales',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="cart.fill" color={color} />,
         }}
       />
-      <Tabs.Screen
+      <MaterialTopTabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          headerShown: false,
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
         }}
       />
-    </Tabs>
+    </MaterialTopTabs>
   );
 }
