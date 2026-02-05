@@ -1,8 +1,10 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import Constants from 'expo-constants';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+    Image,
     KeyboardAvoidingView,
     Platform,
     SafeAreaView,
@@ -12,7 +14,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 
 export default function AddCompanyScreen() {
@@ -40,6 +42,8 @@ export default function AddCompanyScreen() {
     const [incorporationDate, setIncorporationDate] = useState('');
 
     // Media & Branding
+    const [logoImage, setLogoImage] = useState<string | null>(null); // New state for Logo
+    const [bannerImage, setBannerImage] = useState<string | null>(null); // New state for Banner
     const [brandColor, setBrandColor] = useState('#1D61F2');
     const [socialFacebook, setSocialFacebook] = useState('');
     const [socialInstagram, setSocialInstagram] = useState('');
@@ -50,6 +54,72 @@ export default function AddCompanyScreen() {
         Platform.OS === 'android'
             ? StatusBar.currentHeight ?? 0
             : Constants.statusBarHeight;
+
+    const pickImage = async (type: 'logo' | 'banner') => {
+        // No permissions request is necessary for launching the image library
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: type === 'logo' ? [1, 1] : [16, 9],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            if (type === 'logo') {
+                setLogoImage(result.assets[0].uri);
+            } else {
+                setBannerImage(result.assets[0].uri);
+            }
+        }
+    };
+
+    const handleRegister = () => {
+        const formData = new FormData();
+
+        // Append Text Fields
+        formData.append('companyName', companyName);
+        formData.append('website', website);
+        formData.append('category', category);
+        formData.append('companyType', companyType);
+        formData.append('brandBio', brandBio);
+        formData.append('contactEmail', contactEmail);
+        formData.append('phoneNumber', phoneNumber);
+        formData.append('streetAddress', streetAddress);
+        formData.append('city', city);
+        formData.append('state', state);
+        formData.append('country', country);
+        formData.append('pincode', pincode);
+        formData.append('gstNumber', gstNumber);
+        formData.append('panNumber', panNumber);
+        formData.append('cinNumber', cinNumber);
+        formData.append('incorporationDate', incorporationDate);
+        formData.append('brandColor', brandColor);
+        formData.append('socialFacebook', socialFacebook);
+        formData.append('socialInstagram', socialInstagram);
+        formData.append('socialLinkedin', socialLinkedin);
+        formData.append('socialTwitter', socialTwitter);
+
+        // Append Images
+        if (logoImage) {
+            formData.append('logo', {
+                uri: logoImage,
+                name: 'company_logo.jpg',
+                type: 'image/jpeg',
+            } as any);
+        }
+
+        if (bannerImage) {
+            formData.append('banner', {
+                uri: bannerImage,
+                name: 'company_banner.jpg',
+                type: 'image/jpeg',
+            } as any);
+        }
+
+        console.log('FormData Prepared:', formData);
+        // Alert.alert('Success', 'Company data prepared (Check Console)');
+        // TODO: Call API here
+    };
 
     return (
         <>
@@ -76,14 +146,18 @@ export default function AddCompanyScreen() {
                     <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                         {/* Logo Section */}
                         <View style={styles.logoSection}>
-                            <View style={styles.logoContainer}>
-                                <IconSymbol name="cube.box" size={40} color="#fff" />
-                            </View>
+                            <TouchableOpacity onPress={() => pickImage('logo')} style={styles.logoContainer}>
+                                {logoImage ? (
+                                    <Image source={{ uri: logoImage }} style={styles.logoImage} />
+                                ) : (
+                                    <IconSymbol name="cube.box" size={40} color="#fff" />
+                                )}
+                            </TouchableOpacity>
                             <Text style={styles.sectionTitle}>Company Logo</Text>
                             <Text style={styles.sectionSubTitle}>Upload your official brand identity</Text>
-                            <TouchableOpacity style={styles.uploadButton}>
+                            <TouchableOpacity onPress={() => pickImage('logo')} style={styles.uploadButton}>
                                 <IconSymbol name="paperplane.fill" size={16} color="#2563EB" style={{ transform: [{ rotate: '-90deg' }] }} />
-                                <Text style={styles.uploadButtonText}>Upload Photo</Text>
+                                <Text style={styles.uploadButtonText}>{logoImage ? 'Change Photo' : 'Upload Photo'}</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -312,9 +386,18 @@ export default function AddCompanyScreen() {
 
                             <View style={styles.inputGroup}>
                                 <Text style={styles.inputLabel}>Banner Image</Text>
-                                <TouchableOpacity style={[styles.uploadButton, { justifyContent: 'center', backgroundColor: '#F0F4F8' }]}>
-                                    <IconSymbol name="photo" size={20} color="#64748B" />
-                                    <Text style={[styles.uploadButtonText, { color: '#64748B' }]}>Upload Banner</Text>
+                                <TouchableOpacity
+                                    onPress={() => pickImage('banner')}
+                                    style={[styles.uploadButton, { justifyContent: 'center', backgroundColor: '#F0F4F8', height: 120, overflow: 'hidden', paddingHorizontal: 0, paddingVertical: 0 }]}
+                                >
+                                    {bannerImage ? (
+                                        <Image source={{ uri: bannerImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                                    ) : (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <IconSymbol name="photo" size={20} color="#64748B" />
+                                            <Text style={[styles.uploadButtonText, { color: '#64748B' }]}>Upload Banner</Text>
+                                        </View>
+                                    )}
                                 </TouchableOpacity>
                             </View>
 
@@ -382,7 +465,7 @@ export default function AddCompanyScreen() {
                 </KeyboardAvoidingView>
 
                 <View style={styles.footer}>
-                    <TouchableOpacity style={styles.registerButton}>
+                    <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
                         <Text style={styles.registerButtonText}>Register Company</Text>
                     </TouchableOpacity>
                 </View>
@@ -437,6 +520,11 @@ const styles = StyleSheet.create({
         borderStyle: 'dashed',
         borderWidth: 1,
         borderColor: '#999',
+        overflow: 'hidden', // Add overflow hidden for image
+    },
+    logoImage: {
+        width: '100%',
+        height: '100%',
     },
     sectionTitle: {
         fontSize: 20,
