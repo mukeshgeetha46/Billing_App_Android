@@ -20,11 +20,31 @@ export default function AddCompanyScreen() {
     const [companyName, setCompanyName] = useState('');
     const [website, setWebsite] = useState('');
     const [category, setCategory] = useState('');
+    const [companyType, setCompanyType] = useState(''); // New: Company Type
     const [brandBio, setBrandBio] = useState('');
-    const [registrationNumber, setRegistrationNumber] = useState('');
-    const [officeAddress, setOfficeAddress] = useState('');
-    const [contactName, setContactName] = useState('');
+
+    // Contact Details
     const [contactEmail, setContactEmail] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState(''); // New: Phone Number
+    // Address Breakdown
+    const [streetAddress, setStreetAddress] = useState('');
+    const [city, setCity] = useState('');
+    const [state, setState] = useState('');
+    const [country, setCountry] = useState('');
+    const [pincode, setPincode] = useState('');
+
+    // Legal & Business Info
+    const [gstNumber, setGstNumber] = useState('');
+    const [panNumber, setPanNumber] = useState('');
+    const [cinNumber, setCinNumber] = useState(''); // Company Registration Number
+    const [incorporationDate, setIncorporationDate] = useState('');
+
+    // Media & Branding
+    const [brandColor, setBrandColor] = useState('#1D61F2');
+    const [socialFacebook, setSocialFacebook] = useState('');
+    const [socialInstagram, setSocialInstagram] = useState('');
+    const [socialLinkedin, setSocialLinkedin] = useState('');
+    const [socialTwitter, setSocialTwitter] = useState('');
 
     const STATUSBAR_HEIGHT =
         Platform.OS === 'android'
@@ -106,6 +126,16 @@ export default function AddCompanyScreen() {
                             </View>
 
                             <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>Company Type</Text>
+                                <TouchableOpacity style={styles.inputWrapper}>
+                                    <Text style={[styles.input, { color: companyType ? '#111' : '#999' }]}>
+                                        {companyType || 'Select Type (e.g. Private, Startup)'}
+                                    </Text>
+                                    <IconSymbol name="unfold_more" size={20} color="#666" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={styles.inputGroup}>
                                 <View style={styles.rowLabel}>
                                     <Text style={styles.inputLabel}>Brand Bio</Text>
                                     <Text style={styles.charCount}>{brandBio.length}/200</Text>
@@ -123,54 +153,12 @@ export default function AddCompanyScreen() {
                             </View>
                         </View>
 
-                        {/* Legal & Tax Information */}
+                        {/* Contact Details */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionLabel}>LEGAL & TAX INFORMATION</Text>
+                            <Text style={styles.sectionLabel}>CONTACT DETAILS</Text>
 
                             <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Business Registration Number (GST/VAT)</Text>
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Enter GST/VAT ID (e.g. 12345678)"
-                                        value={registrationNumber}
-                                        onChangeText={setRegistrationNumber}
-                                    />
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Office Address</Text>
-                                <View style={[styles.inputWrapper, { height: 100, alignItems: 'flex-start' }]}>
-                                    <TextInput
-                                        style={[styles.input, { height: '100%', textAlignVertical: 'top' }]}
-                                        placeholder="Full street address, city, and postal code"
-                                        value={officeAddress}
-                                        onChangeText={setOfficeAddress}
-                                        multiline
-                                    />
-                                </View>
-                            </View>
-                        </View>
-
-                        {/* Primary Contact */}
-                        <View style={styles.section}>
-                            <Text style={styles.sectionLabel}>PRIMARY CONTACT</Text>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Primary Contact Person's Name</Text>
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="John Doe"
-                                        value={contactName}
-                                        onChangeText={setContactName}
-                                    />
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Contact Email</Text>
+                                <Text style={styles.inputLabel}>Email ID</Text>
                                 <View style={styles.inputWrapper}>
                                     <TextInput
                                         style={styles.input}
@@ -178,6 +166,214 @@ export default function AddCompanyScreen() {
                                         value={contactEmail}
                                         onChangeText={setContactEmail}
                                         keyboardType="email-address"
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>Phone / Mobile Number</Text>
+                                <View style={styles.inputWrapper}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="+91 9876543210"
+                                        value={phoneNumber}
+                                        onChangeText={setPhoneNumber}
+                                        keyboardType="phone-pad"
+                                    />
+                                </View>
+                            </View>
+
+                            <Text style={[styles.inputLabel, { marginTop: 16, marginBottom: 12 }]}>Address Details</Text>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.subLabel}>Street Address</Text>
+                                <View style={styles.inputWrapper}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="123 Main St, Tech Park"
+                                        value={streetAddress}
+                                        onChangeText={setStreetAddress}
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+                                    <Text style={styles.subLabel}>City</Text>
+                                    <View style={styles.inputWrapper}>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="City"
+                                            value={city}
+                                            onChangeText={setCity}
+                                        />
+                                    </View>
+                                </View>
+                                <View style={[styles.inputGroup, { flex: 1 }]}>
+                                    <Text style={styles.subLabel}>State</Text>
+                                    <View style={styles.inputWrapper}>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="State"
+                                            value={state}
+                                            onChangeText={setState}
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+                                    <Text style={styles.subLabel}>Country</Text>
+                                    <View style={styles.inputWrapper}>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Country"
+                                            value={country}
+                                            onChangeText={setCountry}
+                                        />
+                                    </View>
+                                </View>
+                                <View style={[styles.inputGroup, { flex: 1 }]}>
+                                    <Text style={styles.subLabel}>Pincode</Text>
+                                    <View style={styles.inputWrapper}>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="123456"
+                                            value={pincode}
+                                            onChangeText={setPincode}
+                                            keyboardType="number-pad"
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* Legal / Business Info */}
+                        <View style={styles.section}>
+                            <Text style={styles.sectionLabel}>LEGAL / BUSINESS INFO (OPTIONAL)</Text>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>GST Number</Text>
+                                <View style={styles.inputWrapper}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="GSTIN"
+                                        value={gstNumber}
+                                        onChangeText={setGstNumber}
+                                        autoCapitalize="characters"
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>PAN Number</Text>
+                                <View style={styles.inputWrapper}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="PAN"
+                                        value={panNumber}
+                                        onChangeText={setPanNumber}
+                                        autoCapitalize="characters"
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>Company Registration Number (CIN)</Text>
+                                <View style={styles.inputWrapper}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="CIN"
+                                        value={cinNumber}
+                                        onChangeText={setCinNumber}
+                                        autoCapitalize="characters"
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>Incorporation Date</Text>
+                                <View style={styles.inputWrapper}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="DD/MM/YYYY"
+                                        value={incorporationDate}
+                                        onChangeText={setIncorporationDate}
+                                    />
+                                    <IconSymbol name="calendar" size={20} color="#666" />
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* Media & Branding */}
+                        <View style={styles.section}>
+                            <Text style={styles.sectionLabel}>MEDIA & BRANDING (OPTIONAL)</Text>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>Banner Image</Text>
+                                <TouchableOpacity style={[styles.uploadButton, { justifyContent: 'center', backgroundColor: '#F0F4F8' }]}>
+                                    <IconSymbol name="photo" size={20} color="#64748B" />
+                                    <Text style={[styles.uploadButtonText, { color: '#64748B' }]}>Upload Banner</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.inputLabel}>Brand Color</Text>
+                                <View style={[styles.inputWrapper, { paddingLeft: 8 }]}>
+                                    <View style={{ width: 24, height: 24, borderRadius: 4, backgroundColor: brandColor, marginRight: 10 }} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="#000000"
+                                        value={brandColor}
+                                        onChangeText={setBrandColor}
+                                    />
+                                </View>
+                            </View>
+
+                            <Text style={[styles.inputLabel, { marginTop: 16, marginBottom: 12 }]}>Social Media Links</Text>
+
+                            <View style={styles.inputGroup}>
+                                <View style={styles.inputWrapper}>
+                                    <IconSymbol name="link" size={18} color="#666" style={{ marginRight: 8 }} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Facebook URL"
+                                        value={socialFacebook}
+                                        onChangeText={setSocialFacebook}
+                                    />
+                                </View>
+                            </View>
+                            <View style={styles.inputGroup}>
+                                <View style={styles.inputWrapper}>
+                                    <IconSymbol name="link" size={18} color="#666" style={{ marginRight: 8 }} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Instagram URL"
+                                        value={socialInstagram}
+                                        onChangeText={setSocialInstagram}
+                                    />
+                                </View>
+                            </View>
+                            <View style={styles.inputGroup}>
+                                <View style={styles.inputWrapper}>
+                                    <IconSymbol name="link" size={18} color="#666" style={{ marginRight: 8 }} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="LinkedIn URL"
+                                        value={socialLinkedin}
+                                        onChangeText={setSocialLinkedin}
+                                    />
+                                </View>
+                            </View>
+                            <View style={styles.inputGroup}>
+                                <View style={styles.inputWrapper}>
+                                    <IconSymbol name="link" size={18} color="#666" style={{ marginRight: 8 }} />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Twitter URL"
+                                        value={socialTwitter}
+                                        onChangeText={setSocialTwitter}
                                     />
                                 </View>
                             </View>
@@ -301,6 +497,16 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         paddingHorizontal: 16,
         height: 50,
+    },
+    row: {
+        flexDirection: 'row',
+        marginBottom: 20,
+    },
+    subLabel: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: '#555',
+        marginBottom: 6,
     },
     input: {
         flex: 1,
