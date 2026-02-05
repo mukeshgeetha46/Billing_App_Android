@@ -1,4 +1,7 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useProfileQuery } from '@/services/features/auth/authApi';
+import { selectAuth } from '@/store/slices/authSlice';
+import { capitalizeFirstLetter } from '@/utils/string';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
@@ -10,10 +13,12 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 
 export default function ProfileScreen() {
     const router = useRouter();
-
+    const isAuthenticateduser = useSelector(selectAuth);
+    const user = isAuthenticateduser.user;
     const renderSettingItem = (icon: any, title: string, subtitle?: string, badge?: string, showChevron = true) => (
         <TouchableOpacity style={styles.settingItem}>
             <View style={styles.settingIconContainer}>
@@ -32,6 +37,11 @@ export default function ProfileScreen() {
         </TouchableOpacity>
     );
 
+
+    const { data, isLoading, error } = useProfileQuery();
+
+    console.log("data", data)
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" />
@@ -47,8 +57,8 @@ export default function ProfileScreen() {
                             <IconSymbol name="pencil" size={16} color="#FFF" />
                         </TouchableOpacity>
                     </View>
-                    <Text style={styles.userName}>John Doe</Text>
-                    <Text style={styles.userRole}>Store Manager</Text>
+                    <Text style={styles.userName}>{capitalizeFirstLetter(data?.name) || "Unknown"}</Text>
+                    <Text style={styles.userRole}>{data?.role || "Unknown"}</Text>
                     <View style={styles.locationContainer}>
                         <IconSymbol name="building.2" size={14} color="#6B7280" />
                         <Text style={styles.locationText}>Downtown Market Central</Text>

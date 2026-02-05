@@ -1,3 +1,7 @@
+import { useSigninMutation } from '@/services/features/auth/authApi';
+import { AppDispatch } from '@/store';
+import { setCredentials } from '@/store/slices/authSlice';
+import { showToast } from '@/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -12,16 +16,34 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useDispatch } from 'react-redux';
+
 
 export default function LoginScreen() {
     const router = useRouter();
+    const dispatch = useDispatch<AppDispatch>();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [signin, { isLoading, error }] = useSigninMutation();
 
-    const handleLogin = () => {
-        // Implement login logic here
-        console.log('Login with:', email, password);
+    const handleLogin = async () => {
+        try {
+            console.log('Login with:', email, password);
+            const userData = await signin({ email, password }).unwrap();
+
+            // Dispatch credentials to Redux store
+            dispatch(setCredentials({ ...userData, email }));
+
+            showToast('User logged in successfully!');
+            console.log('User logged in successfully! Token and ID stored in Redux.');
+            // Navigate to main app after successful login
+            router.replace('/(drawer)/(tabs)');
+        } catch (err: any) {
+            console.error('Login Failed:', err?.data?.message);
+            showToast(err?.data?.message || 'Login Failed');
+            // You might want to show an alert here
+        }
     };
 
     return (
@@ -58,7 +80,7 @@ export default function LoginScreen() {
                                 <Text style={styles.label}>Password</Text>
                                 <View style={styles.passwordContainer}>
                                     <TextInput
-                                        style={[styles.input, { flex: 1, borderBottomWidth: 0, paddingLeft: 0, marginTop: 0 }]}
+                                        style={styles.passwordInput}
                                         placeholder="Enter your password"
                                         placeholderTextColor="#8E8E93"
                                         value={password}
@@ -76,10 +98,11 @@ export default function LoginScreen() {
                                         />
                                     </TouchableOpacity>
                                 </View>
-                                <TouchableOpacity style={styles.forgotPassword}>
-                                    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                                </TouchableOpacity>
                             </View>
+
+                            <TouchableOpacity style={styles.forgotPassword}>
+                                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                            </TouchableOpacity>
 
                             <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
                                 <Text style={styles.loginButtonText}>Log In</Text>
@@ -177,12 +200,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         backgroundColor: '#FFFFFF',
     },
+    passwordInput: {
+        flex: 1,
+        fontSize: 16,
+        color: '#11181C',
+    },
     eyeIcon: {
         padding: 4,
     },
     forgotPassword: {
         alignSelf: 'flex-end',
-        marginTop: 8,
+        marginTop: -8,
+        marginBottom: 8,
     },
     forgotPasswordText: {
         fontSize: 14,
@@ -195,7 +224,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 32,
+        marginTop: 24,
         shadowColor: '#1E5AEE',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,

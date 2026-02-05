@@ -1,3 +1,7 @@
+import { useSignupMutation } from '@/services/features/auth/authApi';
+import { AppDispatch } from '@/store';
+import { setCredentials } from '@/store/slices/authSlice';
+import { showToast } from '@/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -12,17 +16,32 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useDispatch } from 'react-redux';
 
 export default function RegisterScreen() {
     const router = useRouter();
+    const dispatch = useDispatch<AppDispatch>();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [signup, { isLoading, error }] = useSignupMutation();
+    const handleRegister = async () => {
+        // Simulate API registration - replace with actual API call
+        try {
+            console.log('Register with:', name, email, password);
+            const userData = await signup({ name, email, password }).unwrap();
+            dispatch(setCredentials({ ...userData, email }));
 
-    const handleRegister = () => {
-        // Implement registration logic here
-        console.log('Register with:', name, email, password);
+            showToast('User Signup successfully!');
+
+            console.log('User registered successfully! Token and ID stored in Redux.');
+            // Navigate to main app after successful registration
+            router.replace('/(drawer)/(tabs)');
+        } catch (error: any) {
+            console.log(error);
+            showToast(error.data.message);
+        }
     };
 
     return (
@@ -70,7 +89,7 @@ export default function RegisterScreen() {
                                 <Text style={styles.label}>Password</Text>
                                 <View style={styles.passwordContainer}>
                                     <TextInput
-                                        style={[styles.input, { flex: 1, borderBottomWidth: 0, paddingLeft: 0, marginTop: 0 }]}
+                                        style={styles.passwordInput}
                                         placeholder="Create a password"
                                         placeholderTextColor="#8E8E93"
                                         value={password}
@@ -185,6 +204,11 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 16,
         backgroundColor: '#FFFFFF',
+    },
+    passwordInput: {
+        flex: 1,
+        fontSize: 16,
+        color: '#11181C',
     },
     eyeIcon: {
         padding: 4,
