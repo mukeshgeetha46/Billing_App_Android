@@ -1,3 +1,4 @@
+import { useGetcompanyQuery } from '@/services/features/company/companyApi';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
@@ -16,36 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '../../../components/ui/icon-symbol';
 
-const COMPANIES = [
-    {
-        id: '1',
-        name: 'Global Electronics',
-        category: 'ELECTRONICS & TECH',
-        products: '1,240',
-        image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=200&auto=format&fit=crop',
-    },
-    {
-        id: '2',
-        name: 'Fresh Farm Produce',
-        category: 'FOOD & BEVERAGE',
-        products: '450',
-        image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=200&auto=format&fit=crop',
-    },
-    {
-        id: '3',
-        name: 'Urban Living Co.',
-        category: 'HOME DECOR',
-        products: '812',
-        image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=200&auto=format&fit=crop',
-    },
-    {
-        id: '4',
-        name: 'Elite Beauty Supplies',
-        category: 'HEALTH & BEAUTY',
-        products: '2,100',
-        image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=200&auto=format&fit=crop',
-    },
-];
+
 
 const STATUSBAR_HEIGHT =
     Platform.OS === 'android'
@@ -56,7 +28,8 @@ export default function ManageCompaniesScreen() {
     const router = useRouter();
     const navigation = useNavigation();
     const [searchQuery, setSearchQuery] = useState('');
-
+    const { data: COMPANIES, isLoading, error } = useGetcompanyQuery();
+    console.log("companyData", COMPANIES, error);
     const renderCompanyItem = ({ item }: { item: typeof COMPANIES[0] }) => (
         <View style={styles.card}>
             <View style={styles.cardInfo}>

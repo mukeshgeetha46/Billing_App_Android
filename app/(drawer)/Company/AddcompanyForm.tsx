@@ -1,4 +1,8 @@
+
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useAddcompanyMutation } from '@/services/features/company/companyApi';
+import { showToast } from '@/utils/toast';
+import DateTimePicker from '@react-native-community/datetimepicker'; // Added DateTimePicker
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
@@ -6,6 +10,7 @@ import React, { useState } from 'react';
 import {
     Image,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     SafeAreaView,
     ScrollView,
@@ -14,8 +19,10 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    TouchableWithoutFeedback,
     View
 } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
 
 export default function AddCompanyScreen() {
     const router = useRouter();
@@ -42,13 +49,48 @@ export default function AddCompanyScreen() {
     const [incorporationDate, setIncorporationDate] = useState('');
 
     // Media & Branding
-    const [logoImage, setLogoImage] = useState<string | null>(null); // New state for Logo
-    const [bannerImage, setBannerImage] = useState<string | null>(null); // New state for Banner
+    const [logoImage, setLogoImage] = useState<string | null>(null);
+    const [bannerImage, setBannerImage] = useState<string | null>(null);
     const [brandColor, setBrandColor] = useState('#1D61F2');
     const [socialFacebook, setSocialFacebook] = useState('');
     const [socialInstagram, setSocialInstagram] = useState('');
     const [socialLinkedin, setSocialLinkedin] = useState('');
     const [socialTwitter, setSocialTwitter] = useState('');
+
+    // Pickers State
+    const [modalVisible, setModalVisible] = useState(false);
+    const [currentPickerField, setCurrentPickerField] = useState<'category' | 'companyType' | null>(null);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [date, setDate] = useState(new Date());
+
+    const CATEGORY_OPTIONS = ['Technology', 'Retail', 'Healthcare', 'Consulting', 'Manufacturing', 'Other'];
+    const COMPANY_TYPE_OPTIONS = ['Private Limited', 'Public Limited', 'LLP', 'Startup', 'Sole Proprietorship', 'Partnership'];
+
+    const openPicker = (field: 'category' | 'companyType') => {
+        setCurrentPickerField(field);
+        setModalVisible(true);
+    };
+
+    const handleSelectOption = (option: string) => {
+        if (currentPickerField === 'category') {
+            setCategory(option);
+        } else if (currentPickerField === 'companyType') {
+            setCompanyType(option);
+        }
+        setModalVisible(false);
+    };
+
+    const onDateChange = (event: any, selectedDate?: Date) => {
+        const currentDate = selectedDate || date;
+        setShowDatePicker(Platform.OS === 'ios');
+        setDate(currentDate);
+
+        // Format Date to DD/MM/YYYY
+        const day = currentDate.getDate().toString().padStart(2, '0');
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const year = currentDate.getFullYear();
+        setIncorporationDate(`${day}/${month}/${year}`);
+    };
 
     const STATUSBAR_HEIGHT =
         Platform.OS === 'android'
@@ -72,8 +114,8 @@ export default function AddCompanyScreen() {
             }
         }
     };
-
-    const handleRegister = () => {
+    const [signin, { isLoading, error }] = useAddcompanyMutation();
+    const handleRegister = async () => {
         const formData = new FormData();
 
         // Append Text Fields
@@ -114,6 +156,18 @@ export default function AddCompanyScreen() {
                 name: 'company_banner.jpg',
                 type: 'image/jpeg',
             } as any);
+        }
+
+        try {
+            const response = await signin(formData).unwrap();
+            console.log('Company added successfully:', response);
+
+
+            showToast('Company added successfully!');
+            router.back();
+        } catch (error) {
+
+            showToast('Failed to add company');
         }
 
         console.log('FormData Prepared:', formData);
@@ -191,8 +245,8 @@ export default function AddCompanyScreen() {
 
                             <View style={styles.inputGroup}>
                                 <Text style={styles.inputLabel}>Primary Category</Text>
-                                <TouchableOpacity style={styles.inputWrapper}>
-                                    <Text style={[styles.input, { color: category ? '#111' : '#999' }]}>
+                                <TouchableOpacity style={styles.inputWrapper} onPress={() => openPicker('category')}>
+                                    <Text style={[styles.input, { color: category ? '#111' : '#999', paddingVertical: 15 }]}>
                                         {category || 'Select category'}
                                     </Text>
                                     <IconSymbol name="unfold_more" size={20} color="#666" />
@@ -201,8 +255,8 @@ export default function AddCompanyScreen() {
 
                             <View style={styles.inputGroup}>
                                 <Text style={styles.inputLabel}>Company Type</Text>
-                                <TouchableOpacity style={styles.inputWrapper}>
-                                    <Text style={[styles.input, { color: companyType ? '#111' : '#999' }]}>
+                                <TouchableOpacity style={styles.inputWrapper} onPress={() => openPicker('companyType')}>
+                                    <Text style={[styles.input, { color: companyType ? '#111' : '#999', paddingVertical: 15 }]}>
                                         {companyType || 'Select Type (e.g. Private, Startup)'}
                                     </Text>
                                     <IconSymbol name="unfold_more" size={20} color="#666" />
@@ -368,15 +422,21 @@ export default function AddCompanyScreen() {
 
                             <View style={styles.inputGroup}>
                                 <Text style={styles.inputLabel}>Incorporation Date</Text>
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="DD/MM/YYYY"
-                                        value={incorporationDate}
-                                        onChangeText={setIncorporationDate}
-                                    />
+                                <TouchableOpacity style={styles.inputWrapper} onPress={() => setShowDatePicker(true)}>
+                                    <Text style={[styles.input, { color: incorporationDate ? '#111' : '#999', paddingVertical: 15 }]}>
+                                        {incorporationDate || 'DD/MM/YYYY'}
+                                    </Text>
                                     <IconSymbol name="calendar" size={20} color="#666" />
-                                </View>
+                                </TouchableOpacity>
+                                {showDatePicker && (
+                                    <DateTimePicker
+                                        testID="dateTimePicker"
+                                        value={date}
+                                        mode="date"
+                                        display="default"
+                                        onChange={onDateChange}
+                                    />
+                                )}
                             </View>
                         </View>
 
@@ -469,12 +529,80 @@ export default function AddCompanyScreen() {
                         <Text style={styles.registerButtonText}>Register Company</Text>
                     </TouchableOpacity>
                 </View>
+
+                {/* Custom Modal for Selection */}
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={modalVisible}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                        <View style={styles.modalOverlay}>
+                            <View style={styles.modalContent}>
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>Select {currentPickerField === 'category' ? 'Category' : 'Company Type'}</Text>
+                                    <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                        <IconSymbol name="xmark" size={24} color="#111" />
+                                    </TouchableOpacity>
+                                </View>
+                                <FlatList
+                                    data={currentPickerField === 'category' ? CATEGORY_OPTIONS : COMPANY_TYPE_OPTIONS}
+                                    keyExtractor={(item) => item}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity style={styles.modalItem} onPress={() => handleSelectOption(item)}>
+                                            <Text style={styles.modalItemText}>{item}</Text>
+                                            {(currentPickerField === 'category' ? category : companyType) === item && (
+                                                <IconSymbol name="checkmark" size={20} color="#1D61F2" />
+                                            )}
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                            </View>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </Modal>
             </SafeAreaView>
         </>
     );
 }
 
 const styles = StyleSheet.create({
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
+        maxHeight: '50%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#111',
+    },
+    modalItem: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#EEE',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    modalItemText: {
+        fontSize: 16,
+        color: '#333',
+    },
     safeArea: {
         flex: 1,
         backgroundColor: '#F8F9FB',
