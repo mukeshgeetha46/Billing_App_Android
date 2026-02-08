@@ -1,23 +1,23 @@
 import { baseApi } from "../../baseApi";
 
-export const companyApi = baseApi.injectEndpoints({
+export const storeApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
-        addcompany: builder.mutation({
+        addstore: builder.mutation({
             query: (data) => ({
-                url: "/company/add",
+                url: "/store/add",
                 method: "POST",
                 body: data,
             }),
         }),
-        getcompany: builder.query({
+        getstore: builder.query({
             query: () => ({
-                url: "/company/",
+                url: "/store/",
                 method: "GET",
             }),
         }),
-        Getcompanybyid: builder.query({
+        getStoreById: builder.query({
             query: (id) => ({
-                url: `/company/${id}`,
+                url: `/store/${id}`,
                 method: "GET",
             }),
         }),
@@ -26,7 +26,7 @@ export const companyApi = baseApi.injectEndpoints({
 });
 
 export const {
-    useAddcompanyMutation,
-    useGetcompanyQuery,
-    useGetcompanybyidQuery,
-} = companyApi;
+    useAddstoreMutation,
+    useGetstoreQuery,
+    useGetStoreByIdQuery,
+} = storeApi;

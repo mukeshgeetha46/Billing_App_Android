@@ -1,9 +1,9 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useGetHomedataQuery } from '@/services/features/home/homeApi';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Image, ImageSourcePropType, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 // Type definitions
 type Partner = {
   id: string;
@@ -13,21 +13,21 @@ type Partner = {
   image?: ImageSourcePropType;
 };
 
-const featuredPartners: Partner[] = [
-  { id: '1', name: 'Sumsung', color: '#2E5C55', image: require('@/assets/images/sumsung.png') },
-  { id: '2', name: 'Boat', color: '#277C6B', image: require('@/assets/images/boat.png') },
-  { id: '3', name: 'Zebronics', color: '#7DA645', image: require('@/assets/images/zeb.png') },
-  { id: '4', name: 'Surf Excel', color: '#1B3B48', image: require('@/assets/images/surf1.jpeg') },
-  { id: '5', name: 'Xiomi', color: '#E8D3A8', icon: 'leaf', image: require('@/assets/images/vim.jpeg') },
-  { id: '6', name: 'Lifebuoy', color: '#1B3B48', image: require('@/assets/images/life1.jpeg') },
-  { id: '7', name: 'Dell', color: '#F2E8CF', image: require('@/assets/images/dell.png') },
-  { id: '8', name: 'Acer', color: '#F7F4F2', image: require('@/assets/images/acer.png') },
-  { id: '9', name: 'LG', color: '#2E5C55', image: require('@/assets/images/lg.png') },
-];
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { data: featuredPartners, isLoading, error } = useGetHomedataQuery();
 
+
+  if (isLoading) {
+    return <Text style={{ textAlign: 'center', marginTop: 40 }}>Loading...</Text>;
+  }
+
+  if (error) {
+    return <Text style={{ textAlign: 'center', marginTop: 40 }}>Something went wrong</Text>;
+  }
+
+  console.log(featuredPartners)
   const renderPartnerItem = ({ item }: { item: Partner }) => (
     <TouchableOpacity
       style={styles.partnerItem}
@@ -37,7 +37,7 @@ export default function HomeScreen() {
       <View style={styles.partnerCard}>
         <View style={[styles.partnerLogo]}>
           {/* Placeholder for logo - using first letter or icon if we were more advanced */}
-          <Image source={item.image} style={styles.partnerLogo} resizeMode="contain" />
+          <Image source={{ uri: item.image }} style={styles.partnerLogo} resizeMode="contain" />
         </View>
       </View>
       <Text style={styles.partnerName} numberOfLines={1}>{item.name}</Text>

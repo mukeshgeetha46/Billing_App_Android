@@ -29,7 +29,7 @@ export default function ManageCompaniesScreen() {
     const navigation = useNavigation();
     const [searchQuery, setSearchQuery] = useState('');
     const { data: COMPANIES, isLoading, error } = useGetcompanyQuery();
-    console.log("companyData", COMPANIES, error);
+
     const renderCompanyItem = ({ item }: { item: typeof COMPANIES[0] }) => (
         <View style={styles.card}>
             <View style={styles.cardInfo}>
@@ -49,7 +49,7 @@ export default function ManageCompaniesScreen() {
                     <Text style={styles.actionButtonText}>Edit</Text>
                 </TouchableOpacity>
                 <View style={styles.actionDivider} />
-                <TouchableOpacity style={styles.actionButton} onPress={() => router.push(`/Company/Companyview`)}>
+                <TouchableOpacity style={styles.actionButton} onPress={() => router.push(`/Company/${item.id}`)}>
                     <IconSymbol name="eye" size={18} color="#2563EB" />
                     <Text style={styles.actionButtonText}>View Products</Text>
                 </TouchableOpacity>

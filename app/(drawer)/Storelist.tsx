@@ -1,3 +1,4 @@
+import { useGetstoreQuery } from '@/services/features/stores/storeApi';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { Stack, useRouter } from 'expo-router';
@@ -16,40 +17,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '../../components/ui/icon-symbol';
 
-const STORES = [
-    {
-        id: '1',
-        name: 'Downtown Groceries',
-        owner: 'John Doe',
-        phone: '(555) 012-3456',
-        address: '123 Main St, New York, NY',
-        image: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=200&auto=format&fit=crop',
-    },
-    {
-        id: '2',
-        name: 'Urban Market',
-        owner: 'Sarah Smith',
-        phone: '(555) 987-6543',
-        address: '456 Side Ave, Brooklyn, NY',
-        image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=200&auto=format&fit=crop',
-    },
-    {
-        id: '3',
-        name: 'Green Valley Foods',
-        owner: 'Mike Ross',
-        phone: '(555) 246-8102',
-        address: '789 Garden Rd, Queens, NY',
-        image: 'https://images.unsplash.com/photo-1604719312563-8912e9223c6a?q=80&w=200&auto=format&fit=crop',
-    },
-    {
-        id: '4',
-        name: 'Harbor Quick Stop',
-        owner: 'Lisa Ray',
-        phone: '(555) 321-7654',
-        address: '202 Pier Blvd, Staten Island, NY',
-        image: 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?q=80&w=200&auto=format&fit=crop',
-    },
-];
 
 const STATUSBAR_HEIGHT =
     Platform.OS === 'android'
@@ -60,7 +27,7 @@ export default function StoreListScreen() {
     const router = useRouter();
     const navigation = useNavigation();
     const [searchQuery, setSearchQuery] = useState('');
-
+    const { data: STORES, isLoading, error } = useGetstoreQuery();
     const renderStoreItem = ({ item }: { item: typeof STORES[0] }) => (
         <View style={styles.card}>
             <View style={styles.cardInfo}>
@@ -82,7 +49,7 @@ export default function StoreListScreen() {
                     <IconSymbol name="pencil" size={18} color="#2563EB" />
                     <Text style={styles.actionButtonText}>Edit</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionButton, styles.detailsButton]} onPress={() => router.push('/Store/Storeview')}>
+                <TouchableOpacity style={[styles.actionButton, styles.detailsButton]} onPress={() => router.push(`/Store/${item.id}`)}>
                     <IconSymbol name="eye" size={18} color="#64748B" />
                     <Text style={[styles.actionButtonText, styles.detailsButtonText]}>View Details</Text>
                 </TouchableOpacity>
