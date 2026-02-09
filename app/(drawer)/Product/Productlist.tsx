@@ -2,6 +2,7 @@ import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 
+import { useGetProductQuery } from '@/services/features/product/productApi';
 import {
     Dimensions,
     FlatList,
@@ -19,49 +20,33 @@ import { IconSymbol } from '../../../components/ui/icon-symbol';
 
 const { width } = Dimensions.get('window');
 
-const MOCK_PRODUCTS = [
-    {
-        id: '1',
-        name: 'Organic Whole Bean Coffee - 5kg',
-        price: '$45.00',
-        sku: 'WH-10293',
-        stock: '124 units',
-        image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?q=80&w=200&auto=format&fit=crop',
-        inStock: true,
-    },
-    {
-        id: '2',
-        name: 'Premium Green Tea - 1kg',
-        price: '$22.50',
-        sku: 'GT-55210',
-        stock: '45 units',
-        image: 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?q=80&w=200&auto=format&fit=crop',
-        inStock: true,
-    },
-    {
-        id: '3',
-        name: 'Wildflower Honey - Bulk Case',
-        price: '$185.00',
-        sku: 'HN-90023',
-        stock: '12 units',
-        image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?q=80&w=200&auto=format&fit=crop',
-        inStock: true,
-    },
-    {
-        id: '4',
-        name: 'Gourmet Chocolate Assortment',
-        price: '$12.75',
-        sku: 'CH-33412',
-        stock: 'Out of stock',
-        image: 'https://images.unsplash.com/photo-1548907040-4baa42d10919?q=80&w=200&auto=format&fit=crop',
-        inStock: false,
-    },
-];
+
 
 export default function ProductListScreen() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const navigation = useNavigation();
+    const { data: MOCK_PRODUCTS, isLoading, error } = useGetProductQuery();
+
+    if (isLoading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <Text style={{ textAlign: 'center', marginTop: 50 }}>Loading...</Text>
+            </SafeAreaView>
+        );
+    }
+
+    if (error || !MOCK_PRODUCTS) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <Text style={{ textAlign: 'center', marginTop: 50 }}>
+                    Failed to load store details
+                </Text>
+            </SafeAreaView>
+        );
+    }
+
+
 
     const renderProductItem = ({ item }: { item: typeof MOCK_PRODUCTS[0] }) => (
         <View style={styles.productCard}>
@@ -78,7 +63,7 @@ export default function ProductListScreen() {
             </View>
 
             <View style={styles.cardActions}>
-                <TouchableOpacity style={styles.viewButton} onPress={() => router.push(`/Product/Productview`)}>
+                <TouchableOpacity style={styles.viewButton} onPress={() => router.push(`/Product/${item.id}`)}>
                     <Text style={styles.viewButtonText}>View</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.editButton}>

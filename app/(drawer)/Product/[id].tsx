@@ -1,7 +1,9 @@
-import { Stack, useRouter } from 'expo-router';
-import React from 'react';
+import { useGetProductByIdQuery } from '@/services/features/product/productApi';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useRef, useState } from 'react';
 import {
     Dimensions,
+    FlatList,
     Image,
     ScrollView,
     StatusBar,
@@ -15,26 +17,47 @@ import { IconSymbol } from '../../../components/ui/icon-symbol';
 
 const { width } = Dimensions.get('window');
 
-const MOCK_PRODUCT = {
-    id: '1',
-    name: 'Organic Whole Bean Coffee - 5kg Bulk Bag',
-    category: 'BEVERAGES • COFFEE',
-    sku: 'WH-10293-CF',
-    wholesalePrice: '$45.00',
-    msrp: '$65.00',
-    stock: '124 Units Available',
-    status: 'In Stock',
-    image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?q=80&w=800&auto=format&fit=crop',
-    description: 'Sourced directly from certified organic farms in Ethiopia, this premium whole bean coffee offers a complex flavor profile with notes of citrus, jasmine, and a smooth chocolate finish.\n\nPerfect for boutique coffee shops and retail specialty stores. Packaged in a high-grade 5kg bulk bag with a one-way degassing valve to ensure maximum freshness for up to 6 months.',
-    features: [
-        '100% Arabica Beans',
-        'Fair Trade Certified',
-        'Eco-friendly packaging'
-    ]
-};
+
 
 export default function ProductViewScreen() {
+    const { id } = useLocalSearchParams();
     const router = useRouter();
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const flatListRef = useRef<FlatList>(null);
+
+    const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+        if (viewableItems.length > 0) {
+            setActiveImageIndex(viewableItems[0].index || 0);
+        }
+    }).current;
+
+    const viewabilityConfig = useRef({
+        itemVisiblePercentThreshold: 50
+    }).current;
+
+    const { data: MOCK_PRODUCT, isLoading, isError } = useGetProductByIdQuery(id);
+    if (isLoading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <Text style={{ textAlign: 'center', marginTop: 50 }}>Loading...</Text>
+            </SafeAreaView>
+        );
+    }
+
+    if (isError || !MOCK_PRODUCT) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <Text style={{ textAlign: 'center', marginTop: 50 }}>
+                    Failed to load store details
+                </Text>
+            </SafeAreaView>
+        );
+    }
+    const renderImageItem = ({ item }: { item: string }) => (
+        <View style={styles.imageSlide}>
+            <Image source={{ uri: item }} style={styles.productImage} />
+        </View>
+    );
 
     return (
         <View style={styles.container}>
@@ -42,15 +65,47 @@ export default function ProductViewScreen() {
             <Stack.Screen options={{ headerShown: false }} />
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                {/* Image Header Section */}
+                {/* Image Gallery Section */}
                 <View style={styles.imageContainer}>
-                    <Image source={{ uri: MOCK_PRODUCT.image }} style={styles.productImage} />
+                    <FlatList
+                        ref={flatListRef}
+                        data={MOCK_PRODUCT.images}
+                        renderItem={renderImageItem}
+                        keyExtractor={(item, index) => index.toString()}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        onViewableItemsChanged={onViewableItemsChanged}
+                        viewabilityConfig={viewabilityConfig}
+                    />
+
+                    {/* Back Button */}
                     <TouchableOpacity
                         style={styles.backButton}
                         onPress={() => router.back()}
                     >
                         <IconSymbol name="chevron.left" size={24} color="#FFF" />
                     </TouchableOpacity>
+
+                    {/* Pagination Dots */}
+                    <View style={styles.paginationContainer}>
+                        {MOCK_PRODUCT.images.map((_, index) => (
+                            <View
+                                key={index}
+                                style={[
+                                    styles.paginationDot,
+                                    index === activeImageIndex && styles.paginationDotActive
+                                ]}
+                            />
+                        ))}
+                    </View>
+
+                    {/* Image Counter */}
+                    <View style={styles.imageCounter}>
+                        <Text style={styles.imageCounterText}>
+                            {activeImageIndex + 1} / {MOCK_PRODUCT.images.length}
+                        </Text>
+                    </View>
                 </View>
 
                 {/* Info Section */}
@@ -145,6 +200,10 @@ const styles = StyleSheet.create({
         height: width * 0.8,
         position: 'relative',
     },
+    imageSlide: {
+        width: width,
+        height: width * 0.8,
+    },
     productImage: {
         width: '100%',
         height: '100%',
@@ -160,6 +219,40 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.3)',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    paginationContainer: {
+        position: 'absolute',
+        bottom: 20,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 6,
+    },
+    paginationDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: 'rgba(255,255,255,0.4)',
+    },
+    paginationDotActive: {
+        width: 24,
+        backgroundColor: '#FFFFFF',
+    },
+    imageCounter: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    imageCounterText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '600',
     },
     infoContainer: {
         padding: 24,

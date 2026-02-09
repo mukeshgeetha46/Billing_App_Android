@@ -1,9 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     Image,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -11,25 +13,108 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    TouchableWithoutFeedback,
     View,
 } from 'react-native';
+import { FlatList } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '../../../components/ui/icon-symbol';
+import { useAddproductMutation } from '../../../services/features/product/productApi';
 
 export default function ProductAddform() {
     const router = useRouter();
     const navigation = useNavigation();
-    const [isInStock, setIsInStock] = useState(true);
-    const [productName, setProductName] = useState('');
-    const [sku, setSku] = useState('');
-    const [price, setPrice] = useState('0.00');
-    const [category, setCategory] = useState('');
-    const [description, setDescription] = useState('');
 
-    const productImages = [
-        { id: '1', uri: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400&auto=format&fit=crop' },
-        { id: '2', uri: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=400&auto=format&fit=crop' },
-    ];
+    // Form States
+    const [productName, setProductName] = useState('');
+    const [productTitle, setProductTitle] = useState('');
+    const [wholesalePrice, setWholesalePrice] = useState('');
+    const [mrp, setMrp] = useState('');
+    const [stock, setStock] = useState('0');
+    const [productDescription, setProductDescription] = useState('');
+    const [unit, setUnit] = useState('');
+    const [quantity, setQuantity] = useState('');
+    const [color, setColor] = useState('');
+    const [gstPercent, setGstPercent] = useState('0');
+    const [isActive, setIsActive] = useState(true);
+    const [companyID, setCompanyID] = useState('');
+
+    // Image States
+    const [productImages, setProductImages] = useState<string[]>([]);
+
+    // Modal States
+    const [modalVisible, setModalVisible] = useState(false);
+    const [currentPickerField, setCurrentPickerField] = useState<'unit' | null>(null);
+
+    const UNIT_OPTIONS = ['kg', 'pcs', 'liter'];
+
+    const pickImage = async () => {
+        if (productImages.length >= 5) {
+            alert('Maximum 5 photos allowed');
+            return;
+        }
+
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setProductImages([...productImages, result.assets[0].uri]);
+        }
+    };
+
+    const removeImage = (index: number) => {
+        setProductImages(productImages.filter((_, i) => i !== index));
+    };
+
+    const openPicker = (field: 'unit') => {
+        setCurrentPickerField(field);
+        setModalVisible(true);
+    };
+
+    const handleSelectOption = (option: string) => {
+        if (currentPickerField === 'unit') {
+            setUnit(option);
+        }
+        setModalVisible(false);
+    };
+    const [addproductMutation] = useAddproductMutation();
+    const handleSave = async () => {
+        try {
+            // TODO: Implement save logic with FormData
+            const formData = new FormData();
+
+            formData.append('ProductName', productName);
+            formData.append('ProductTitle', productTitle);
+            formData.append('WholesalePrice', wholesalePrice);
+            formData.append('MRP', mrp);
+            formData.append('Stock', stock);
+            formData.append('ProductDescription', productDescription);
+            formData.append('Unit', unit);
+            formData.append('Quantity', quantity);
+            formData.append('Color', color);
+            formData.append('GSTPercent', gstPercent);
+            formData.append('IsActive', isActive ? '1' : '0');
+            formData.append('CompanyID', companyID);
+
+            // Append images
+            productImages.forEach((imageUri, index) => {
+                formData.append('ProductImages', {
+                    uri: imageUri,
+                    name: `product_image_${index}.jpg`,
+                    type: 'image/jpeg',
+                } as any);
+            });
+            const res = await addproductMutation(formData);
+            console.log('Product data prepared:', res);
+        } catch (error) {
+            console.log(error);
+        }
+        // Call API here
+    };
 
     return (
         <>
@@ -45,7 +130,7 @@ export default function ProductAddform() {
                             <Text style={styles.headerActionText}>Cancel</Text>
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>Add New Product</Text>
-                        <TouchableOpacity onPress={() => { /* Save Logic */ }}>
+                        <TouchableOpacity onPress={handleSave}>
                             <Text style={[styles.headerActionText, styles.saveText]}>Save</Text>
                         </TouchableOpacity>
                     </View>
@@ -58,18 +143,21 @@ export default function ProductAddform() {
                         </View>
 
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
-                            <TouchableOpacity style={styles.addPhotoButton}>
+                            <TouchableOpacity style={styles.addPhotoButton} onPress={pickImage}>
                                 <View style={styles.addPhotoIconContainer}>
                                     <IconSymbol name="camera" size={32} color="#2563EB" />
                                     <Text style={styles.addPhotoText}>ADD PHOTO</Text>
                                 </View>
                             </TouchableOpacity>
 
-                            {productImages.map((img) => (
-                                <View key={img.id} style={styles.imageWrapper}>
-                                    <Image source={{ uri: img.uri }} style={styles.productImage} />
-                                    <TouchableOpacity style={styles.removeImageButton}>
-                                        <IconSymbol name="minus" size={14} color="#FFF" />
+                            {productImages.map((imageUri, index) => (
+                                <View key={index} style={styles.imageWrapper}>
+                                    <Image source={{ uri: imageUri }} style={styles.productImage} />
+                                    <TouchableOpacity
+                                        style={styles.removeImageButton}
+                                        onPress={() => removeImage(index)}
+                                    >
+                                        <IconSymbol name="xmark" size={14} color="#FFF" />
                                     </TouchableOpacity>
                                 </View>
                             ))}
@@ -80,50 +168,128 @@ export default function ProductAddform() {
                         {/* Form Fields */}
                         <View style={styles.formContainer}>
                             <View style={styles.combinedInputGroup}>
-                                <View style={styles.inputField}>
-                                    <Text style={styles.label}>Product Name</Text>
+                                <View style={styles.inputFieldNoBorder}>
+                                    <Text style={styles.label}>Product Name *</Text>
                                     <TextInput
                                         style={styles.input}
-                                        placeholder="e.g. Organic Whole Milk (1L)"
+                                        placeholder="e.g. Organic Whole Milk"
                                         placeholderTextColor="#94A3B8"
                                         value={productName}
                                         onChangeText={setProductName}
                                     />
                                 </View>
                                 <View style={styles.divider} />
-                                <View style={styles.inputField}>
-                                    <Text style={styles.label}>SKU</Text>
+                                <View style={styles.inputFieldNoBorder}>
+                                    <Text style={styles.label}>Product Title</Text>
                                     <TextInput
                                         style={styles.input}
-                                        placeholder="e.g. DAIRY-MILK-001"
+                                        placeholder="e.g. Premium Quality Milk"
                                         placeholderTextColor="#94A3B8"
-                                        value={sku}
-                                        onChangeText={setSku}
+                                        value={productTitle}
+                                        onChangeText={setProductTitle}
                                     />
                                 </View>
                             </View>
 
                             <View style={styles.row}>
                                 <View style={[styles.inputField, styles.halfWidth]}>
-                                    <Text style={styles.label}>Price</Text>
+                                    <Text style={styles.label}>Wholesale Price *</Text>
                                     <View style={styles.priceInputContainer}>
-                                        <Text style={styles.currencyPrefix}>$</Text>
+                                        <Text style={styles.currencyPrefix}>₹</Text>
                                         <TextInput
                                             style={styles.priceInput}
-                                            value={price}
-                                            onChangeText={setPrice}
+                                            value={wholesalePrice}
+                                            onChangeText={setWholesalePrice}
                                             keyboardType="numeric"
+                                            placeholder="0.00"
+                                            placeholderTextColor="#94A3B8"
                                         />
                                     </View>
                                 </View>
                                 <View style={[styles.inputField, styles.halfWidth]}>
-                                    <Text style={styles.label}>Category</Text>
-                                    <TouchableOpacity style={styles.dropdownButton}>
-                                        <Text style={category ? styles.dropdownText : styles.dropdownPlaceholder}>
-                                            {category || 'Select'}
+                                    <Text style={styles.label}>MRP *</Text>
+                                    <View style={styles.priceInputContainer}>
+                                        <Text style={styles.currencyPrefix}>₹</Text>
+                                        <TextInput
+                                            style={styles.priceInput}
+                                            value={mrp}
+                                            onChangeText={setMrp}
+                                            keyboardType="numeric"
+                                            placeholder="0.00"
+                                            placeholderTextColor="#94A3B8"
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={[styles.inputField, styles.halfWidth]}>
+                                    <Text style={styles.label}>Stock</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={stock}
+                                        onChangeText={setStock}
+                                        keyboardType="numeric"
+                                        placeholder="0"
+                                        placeholderTextColor="#94A3B8"
+                                    />
+                                </View>
+                                <View style={[styles.inputField, styles.halfWidth]}>
+                                    <Text style={styles.label}>Unit</Text>
+                                    <TouchableOpacity style={styles.dropdownButton} onPress={() => openPicker('unit')}>
+                                        <Text style={unit ? styles.dropdownText : styles.dropdownPlaceholder}>
+                                            {unit || 'Select Unit'}
                                         </Text>
                                         <IconSymbol name="chevron.left" size={16} color="#94A3B8" style={{ transform: [{ rotate: '-90deg' }] }} />
                                     </TouchableOpacity>
+                                </View>
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={[styles.inputField, styles.halfWidth]}>
+                                    <Text style={styles.label}>Quantity</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="e.g. 1L, 500g"
+                                        placeholderTextColor="#94A3B8"
+                                        value={quantity}
+                                        onChangeText={setQuantity}
+                                    />
+                                </View>
+                                <View style={[styles.inputField, styles.halfWidth]}>
+                                    <Text style={styles.label}>Color</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="e.g. Red, Blue"
+                                        placeholderTextColor="#94A3B8"
+                                        value={color}
+                                        onChangeText={setColor}
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={[styles.inputField, styles.halfWidth]}>
+                                    <Text style={styles.label}>GST %</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={gstPercent}
+                                        onChangeText={setGstPercent}
+                                        keyboardType="numeric"
+                                        placeholder="0"
+                                        placeholderTextColor="#94A3B8"
+                                    />
+                                </View>
+                                <View style={[styles.inputField, styles.halfWidth]}>
+                                    <Text style={styles.label}>Company ID *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={companyID}
+                                        onChangeText={setCompanyID}
+                                        keyboardType="numeric"
+                                        placeholder="Enter ID"
+                                        placeholderTextColor="#94A3B8"
+                                    />
                                 </View>
                             </View>
 
@@ -136,24 +302,24 @@ export default function ProductAddform() {
                                     multiline
                                     numberOfLines={4}
                                     textAlignVertical="top"
-                                    value={description}
-                                    onChangeText={setDescription}
+                                    value={productDescription}
+                                    onChangeText={setProductDescription}
                                 />
                             </View>
 
                             <View style={styles.stockCard}>
                                 <View style={styles.stockIconContainer}>
-                                    <IconSymbol name="cube.box" size={24} color="#2563EB" />
+                                    <IconSymbol name="checkmark.circle.fill" size={24} color="#2563EB" />
                                 </View>
                                 <View style={styles.stockInfo}>
-                                    <Text style={styles.stockTitle}>In Stock</Text>
-                                    <Text style={styles.stockSubtitle}>Available for immediate purchase</Text>
+                                    <Text style={styles.stockTitle}>Active Product</Text>
+                                    <Text style={styles.stockSubtitle}>Product is visible to customers</Text>
                                 </View>
                                 <Switch
-                                    value={isInStock}
-                                    onValueChange={setIsInStock}
+                                    value={isActive}
+                                    onValueChange={setIsActive}
                                     trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
-                                    thumbColor={isInStock ? '#FFF' : '#F1F5F9'}
+                                    thumbColor={isActive ? '#FFF' : '#F1F5F9'}
                                 />
                             </View>
                         </View>
@@ -161,12 +327,45 @@ export default function ProductAddform() {
 
                     {/* Sticky Footer */}
                     <View style={styles.footer}>
-                        <TouchableOpacity style={styles.addCatalogButton}>
+                        <TouchableOpacity style={styles.addCatalogButton} onPress={handleSave}>
                             <IconSymbol name="plus" size={20} color="#FFF" />
                             <Text style={styles.addCatalogButtonText}>Add Product to Catalog</Text>
                         </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
+
+                {/* Unit Selection Modal */}
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={modalVisible}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                        <View style={styles.modalOverlay}>
+                            <View style={styles.modalContent}>
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalTitle}>Select Unit</Text>
+                                    <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                        <IconSymbol name="xmark" size={24} color="#0F172A" />
+                                    </TouchableOpacity>
+                                </View>
+                                <FlatList
+                                    data={UNIT_OPTIONS}
+                                    keyExtractor={(item) => item}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity style={styles.modalItem} onPress={() => handleSelectOption(item)}>
+                                            <Text style={styles.modalItemText}>{item}</Text>
+                                            {unit === item && (
+                                                <IconSymbol name="checkmark" size={20} color="#2563EB" />
+                                            )}
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                            </View>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </Modal>
             </SafeAreaView>
         </>
     );
@@ -261,10 +460,10 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 8,
         right: 8,
-        backgroundColor: 'rgba(15, 23, 42, 0.8)',
+        backgroundColor: 'rgba(239, 68, 68, 0.9)',
         borderRadius: 10,
-        width: 20,
-        height: 20,
+        width: 24,
+        height: 24,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -293,6 +492,10 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         borderWidth: 1,
         borderColor: '#E2E8F0',
+    },
+    inputFieldNoBorder: {
+        padding: 16,
+        backgroundColor: 'transparent',
     },
     label: {
         fontSize: 13,
@@ -409,5 +612,40 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 16,
         fontWeight: '700',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
+        maxHeight: '40%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#0F172A',
+    },
+    modalItem: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F5F9',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    modalItemText: {
+        fontSize: 16,
+        color: '#0F172A',
     },
 });
