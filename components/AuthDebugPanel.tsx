@@ -14,7 +14,6 @@ export default function AuthDebugPanel() {
 
     const handleLogout = () => {
         dispatch(logout());
-        console.log('User logged out - Redux state cleared');
     };
 
     return (

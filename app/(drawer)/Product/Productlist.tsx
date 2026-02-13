@@ -16,8 +16,8 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import emptyimg from '../../../assets/images/empty.png';
 import { IconSymbol } from '../../../components/ui/icon-symbol';
-
 const { width } = Dimensions.get('window');
 
 
@@ -25,8 +25,29 @@ const { width } = Dimensions.get('window');
 export default function ProductListScreen() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
     const navigation = useNavigation();
     const { data: MOCK_PRODUCTS, isLoading, error } = useGetProductQuery();
+
+    const handleAddVariant = (id: string) => {
+        router.push({
+            pathname: '/Product/ProductAddVariants',
+            params: { productId: id }
+        });
+        setActiveMenuId(null);
+    };
+
+    const handleAddVariantImages = (id: string) => {
+        router.push({
+            pathname: '/Product/ProductAddVariantImages',
+            params: { productId: id }
+        });
+        setActiveMenuId(null);
+    };
+
+    const toggleMenu = (id: string) => {
+        setActiveMenuId(activeMenuId === id ? null : id);
+    };
 
     if (isLoading) {
         return (
@@ -50,11 +71,45 @@ export default function ProductListScreen() {
 
     const renderProductItem = ({ item }: { item: typeof MOCK_PRODUCTS[0] }) => (
         <View style={styles.productCard}>
+            {/* Three-dot menu button */}
+            <TouchableOpacity
+                style={styles.moreButton}
+                onPress={() => toggleMenu(item.id)}
+            >
+                <IconSymbol name="more.vertical" size={20} color="#64748B" />
+            </TouchableOpacity>
+
+            {/* Popup Menu */}
+            {activeMenuId === item.id && (
+                <View style={styles.menuPopup}>
+                    <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={() => handleAddVariant(item.id)}
+                    >
+                        <IconSymbol name="plus" size={16} color="#0F172A" style={{ marginRight: 8 }} />
+                        <Text style={styles.menuItemText}>Add Variants</Text>
+                    </TouchableOpacity>
+                    <View style={styles.menuDivider} />
+                    <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={() => handleAddVariantImages(item.id)}
+                    >
+                        <IconSymbol name="camera" size={16} color="#0F172A" style={{ marginRight: 8 }} />
+                        <Text style={styles.menuItemText}>Add VariantImages</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+
             <View style={styles.cardMainContent}>
-                <Image source={{ uri: item.image }} style={styles.productImage} />
+                <Image
+                    source={item.image ? { uri: item.image } : emptyimg}
+                    style={[styles.productImage, { resizeMode: item.image ? 'cover' : 'contain' }]}
+                />
+
                 <View style={styles.productInfo}>
                     <Text style={styles.productName}>{item.name}</Text>
-                    <Text style={styles.productPrice}>{item.price}</Text>
+                    <Text style={styles.productPrice} numberOfLines={1}
+                        ellipsizeMode="tail">{item.description}</Text>
                     <Text style={styles.productSku}>SKU: {item.sku}</Text>
                     <Text style={[styles.productStock, !item.inStock && styles.outOfStock]}>
                         Stock: {item.stock}
@@ -63,10 +118,37 @@ export default function ProductListScreen() {
             </View>
 
             <View style={styles.cardActions}>
-                <TouchableOpacity style={styles.viewButton} onPress={() => router.push(`/Product/${item.id}`)}>
-                    <Text style={styles.viewButtonText}>View</Text>
+                <TouchableOpacity style={styles.viewButton} onPress={() => {
+                    if (item.stockcount <= 0) {
+                        return;
+                    }
+
+                    router.push({
+                        pathname: '/Product/[id]',
+                        params: {
+                            id: item.id,
+                            color: item.color,
+                            VariantID: item.VariantID,
+                        },
+                    });
+
+                }}>
+                    <TouchableOpacity
+                        disabled={item.stockcount <= 0}
+                        style={[
+                            styles.viewButton,
+                            item.stockcount <= 0 && styles.disabledButton
+                        ]}
+                    >
+                        <Text style={styles.viewButtonText}>View</Text>
+                    </TouchableOpacity>
+
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.editButton}>
+                <TouchableOpacity disabled={item.stockcount <= 0}
+                    style={[
+                        styles.editButton,
+                        item.stockcount <= 0 && styles.disabledButton
+                    ]} >
                     <Text style={styles.editButtonText}>Edit</Text>
                 </TouchableOpacity>
             </View>
@@ -132,6 +214,10 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F8FAFC',
     },
+    disabledButton: {
+        opacity: 0.5,
+    },
+
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -186,8 +272,51 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF',
         marginBottom: 1,
         padding: 16,
+        paddingTop: 24, // Added space for the menu button
         borderBottomWidth: 1,
         borderBottomColor: '#F1F5F9',
+        position: 'relative',
+    },
+    moreButton: {
+        position: 'absolute',
+        top: 8,
+        right: 12,
+        padding: 4,
+        zIndex: 10,
+    },
+    menuPopup: {
+        position: 'absolute',
+        top: 36,
+        right: 16,
+        backgroundColor: '#FFF',
+        borderRadius: 8,
+        padding: 4,
+        zIndex: 100,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 10,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        minWidth: 160,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 4,
+    },
+    menuItemText: {
+        fontSize: 14,
+        color: '#0F172A',
+        fontWeight: '500',
+    },
+    menuDivider: {
+        height: 1,
+        backgroundColor: '#F1F5F9',
+        marginHorizontal: 4,
     },
     cardMainContent: {
         flexDirection: 'row',
@@ -198,6 +327,7 @@ const styles = StyleSheet.create({
         height: 80,
         borderRadius: 8,
         backgroundColor: '#F1F5F9',
+
     },
     productInfo: {
         flex: 1,

@@ -40,7 +40,7 @@ export default function ProfileScreen() {
 
     const { data, isLoading, error } = useProfileQuery();
 
-    console.log("data", data)
+
 
     return (
         <View style={styles.container}>

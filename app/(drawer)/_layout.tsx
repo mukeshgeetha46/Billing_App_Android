@@ -21,7 +21,6 @@ function ProtectedDrawer() {
   const colorScheme = useColorScheme();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const isAuthenticateduser = useSelector(selectAuth);
-  console.log("isAuthenticateduser", isAuthenticateduser)
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Redirect href="/Auth/Login" />;

@@ -21,6 +21,18 @@ export const companyApi = baseApi.injectEndpoints({
                 method: "GET",
             }),
         }),
+        GetCompanyNameById: builder.query({
+            query: () => ({
+                url: `/company/getname`,
+                method: "GET",
+            }),
+        }),
+        GetCompanyProducts: builder.query({
+            query: (id) => ({
+                url: `/product/company/detail/${id}`,
+                method: "GET",
+            }),
+        }),
 
     }),
 });
@@ -29,4 +41,6 @@ export const {
     useAddcompanyMutation,
     useGetcompanyQuery,
     useGetcompanybyidQuery,
+    useGetCompanyNameByIdQuery,
+    useGetCompanyProductsQuery,
 } = companyApi;

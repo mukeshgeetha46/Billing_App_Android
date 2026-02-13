@@ -24,6 +24,8 @@ const COLORS = [
     { id: '5', name: 'Cream', color: '#F5F5DC' },
 ];
 
+const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+
 const PRODUCT_DATA = {
     id: '1',
     name: 'Artisan Leather Tote',
@@ -50,6 +52,7 @@ export default function ProductDetailsScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+    const [selectedSize, setSelectedSize] = useState('M');
     const [quantity, setQuantity] = useState(12);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
 
@@ -149,6 +152,28 @@ export default function ProductDetailsScreen() {
                     <Text style={styles.selectedColorText}>
                         Selected: <Text style={{ color: '#111827' }}>{selectedColor.name}</Text>
                     </Text>
+
+                    <View style={styles.divider} />
+
+                    {/* Size Selector */}
+                    <Text style={styles.sectionTitle}>SELECT SIZE</Text>
+                    <View style={styles.sizeRow}>
+                        {SIZES.map((size) => (
+                            <TouchableOpacity
+                                key={size}
+                                onPress={() => setSelectedSize(size)}
+                                style={[
+                                    styles.sizeChip,
+                                    selectedSize === size && styles.selectedSizeChip
+                                ]}
+                            >
+                                <Text style={[
+                                    styles.sizeText,
+                                    selectedSize === size && styles.selectedSizeText
+                                ]}>{size}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
 
                     <View style={styles.divider} />
 
@@ -365,6 +390,33 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#6B7280',
         marginTop: 8,
+    },
+    sizeRow: {
+        flexDirection: 'row',
+        gap: 12,
+        flexWrap: 'wrap',
+    },
+    sizeChip: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        backgroundColor: '#FFF',
+        minWidth: 50,
+        alignItems: 'center',
+    },
+    selectedSizeChip: {
+        borderColor: '#2563EB',
+        backgroundColor: '#EFF6FF',
+    },
+    sizeText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#4B5563',
+    },
+    selectedSizeText: {
+        color: '#2563EB',
     },
     quantityRow: {
         flexDirection: 'row',

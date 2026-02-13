@@ -54,13 +54,11 @@ export default function StoreView() {
     };
 
     const handleEditStore = () => {
-        // Navigate to edit store screen
-        console.log('Edit store details');
+
     };
 
     const handleViewHistory = () => {
-        // Navigate to full history
-        console.log('View full history');
+
     };
 
     return (

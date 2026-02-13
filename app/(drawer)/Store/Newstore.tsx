@@ -79,7 +79,7 @@ export default function AddNewStoreScreen() {
             const res = await addStore(formData);
 
             const data = await res.data;
-            console.log("SUCCESS:", data);
+
             alert("Store saved successfully");
         } catch (err) {
             console.error("Save store error:", err);
@@ -105,7 +105,7 @@ export default function AddNewStoreScreen() {
             // ✅ REMOVE ALL SPACES FROM FILE URI
             uri = uri.replace(/\s+/g, '');
 
-            console.log('Clean URI:', uri);
+
             setShopLogo(uri);
 
         } catch (error) {
@@ -117,7 +117,7 @@ export default function AddNewStoreScreen() {
 
     const cleanUri = shopLogo;
 
-    console.log('🧶🎡🎠', cleanUri, newLogo)
+
     return (
         <SafeAreaView style={styles.safeArea}>
             {/* Header */}

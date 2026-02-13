@@ -29,14 +29,14 @@ export default function LoginScreen() {
 
     const handleLogin = async () => {
         try {
-            console.log('Login with:', email, password);
+
             const userData = await signin({ email, password }).unwrap();
 
             // Dispatch credentials to Redux store
             dispatch(setCredentials({ ...userData, email }));
 
             showToast('User logged in successfully!');
-            console.log('User logged in successfully! Token and ID stored in Redux.');
+
             // Navigate to main app after successful login
             router.replace('/(drawer)/(tabs)');
         } catch (err: any) {

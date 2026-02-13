@@ -27,7 +27,7 @@ export default function HomeScreen() {
     return <Text style={{ textAlign: 'center', marginTop: 40 }}>Something went wrong</Text>;
   }
 
-  console.log(featuredPartners)
+
   const renderPartnerItem = ({ item }: { item: Partner }) => (
     <TouchableOpacity
       style={styles.partnerItem}

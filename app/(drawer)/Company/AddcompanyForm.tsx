@@ -160,7 +160,7 @@ export default function AddCompanyScreen() {
 
         try {
             const response = await signin(formData).unwrap();
-            console.log('Company added successfully:', response);
+
 
 
             showToast('Company added successfully!');
@@ -170,7 +170,7 @@ export default function AddCompanyScreen() {
             showToast('Failed to add company');
         }
 
-        console.log('FormData Prepared:', formData);
+
         // Alert.alert('Success', 'Company data prepared (Check Console)');
         // TODO: Call API here
     };

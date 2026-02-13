@@ -29,17 +29,16 @@ export default function RegisterScreen() {
     const handleRegister = async () => {
         // Simulate API registration - replace with actual API call
         try {
-            console.log('Register with:', name, email, password);
+
             const userData = await signup({ name, email, password }).unwrap();
             dispatch(setCredentials({ ...userData, email }));
 
             showToast('User Signup successfully!');
 
-            console.log('User registered successfully! Token and ID stored in Redux.');
             // Navigate to main app after successful registration
             router.replace('/(drawer)/(tabs)');
         } catch (error: any) {
-            console.log(error);
+
             showToast(error.data.message);
         }
     };

@@ -1,9 +1,10 @@
+import { useGetCompanyNameByIdQuery } from '@/services/features/company/companyApi';
+import { showToast } from '@/utils/toast';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Image,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -14,7 +15,7 @@ import {
     TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
-    View,
+    View
 } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,15 +39,22 @@ export default function ProductAddform() {
     const [gstPercent, setGstPercent] = useState('0');
     const [isActive, setIsActive] = useState(true);
     const [companyID, setCompanyID] = useState('');
+    const [selectedCompany, setSelectedCompany] = useState<any>(null);
+
 
     // Image States
     const [productImages, setProductImages] = useState<string[]>([]);
 
     // Modal States
     const [modalVisible, setModalVisible] = useState(false);
-    const [currentPickerField, setCurrentPickerField] = useState<'unit' | null>(null);
+    const [currentPickerField, setCurrentPickerField] = useState<'unit' | 'company' | null>(null);
+
+    const { data: Company_OPTIONS, isLoading } = useGetCompanyNameByIdQuery();
 
     const UNIT_OPTIONS = ['kg', 'pcs', 'liter'];
+
+    // Fetch companies
+
 
     const pickImage = async () => {
         if (productImages.length >= 5) {
@@ -70,14 +78,17 @@ export default function ProductAddform() {
         setProductImages(productImages.filter((_, i) => i !== index));
     };
 
-    const openPicker = (field: 'unit') => {
+    const openPicker = (field: 'unit' | 'company') => {
         setCurrentPickerField(field);
         setModalVisible(true);
     };
 
-    const handleSelectOption = (option: string) => {
+    const handleSelectOption = (option: string | any) => {
         if (currentPickerField === 'unit') {
             setUnit(option);
+        } else if (currentPickerField === 'company') {
+            setSelectedCompany(option.CompanyName);
+            setCompanyID(option.CompanyID || '');
         }
         setModalVisible(false);
     };
@@ -89,29 +100,17 @@ export default function ProductAddform() {
 
             formData.append('ProductName', productName);
             formData.append('ProductTitle', productTitle);
-            formData.append('WholesalePrice', wholesalePrice);
-            formData.append('MRP', mrp);
-            formData.append('Stock', stock);
             formData.append('ProductDescription', productDescription);
-            formData.append('Unit', unit);
-            formData.append('Quantity', quantity);
-            formData.append('Color', color);
             formData.append('GSTPercent', gstPercent);
             formData.append('IsActive', isActive ? '1' : '0');
             formData.append('CompanyID', companyID);
-
-            // Append images
-            productImages.forEach((imageUri, index) => {
-                formData.append('ProductImages', {
-                    uri: imageUri,
-                    name: `product_image_${index}.jpg`,
-                    type: 'image/jpeg',
-                } as any);
-            });
             const res = await addproductMutation(formData);
-            console.log('Product data prepared:', res);
+
+            showToast('Product created successfully!');
+            router.push('/Product/Productlist');
         } catch (error) {
-            console.log(error);
+
+            showToast('Product created failed!');
         }
         // Call API here
     };
@@ -126,7 +125,7 @@ export default function ProductAddform() {
                 >
                     {/* Header */}
                     <View style={styles.header}>
-                        <TouchableOpacity onPress={() => router.back()}>
+                        <TouchableOpacity onPress={() => router.push(`/Product/Productlist`)}>
                             <Text style={styles.headerActionText}>Cancel</Text>
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>Add New Product</Text>
@@ -137,31 +136,7 @@ export default function ProductAddform() {
 
                     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                         {/* Image Section */}
-                        <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>Product Images</Text>
-                            <Text style={styles.sectionSubtitle}>UP TO 5 PHOTOS</Text>
-                        </View>
 
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
-                            <TouchableOpacity style={styles.addPhotoButton} onPress={pickImage}>
-                                <View style={styles.addPhotoIconContainer}>
-                                    <IconSymbol name="camera" size={32} color="#2563EB" />
-                                    <Text style={styles.addPhotoText}>ADD PHOTO</Text>
-                                </View>
-                            </TouchableOpacity>
-
-                            {productImages.map((imageUri, index) => (
-                                <View key={index} style={styles.imageWrapper}>
-                                    <Image source={{ uri: imageUri }} style={styles.productImage} />
-                                    <TouchableOpacity
-                                        style={styles.removeImageButton}
-                                        onPress={() => removeImage(index)}
-                                    >
-                                        <IconSymbol name="xmark" size={14} color="#FFF" />
-                                    </TouchableOpacity>
-                                </View>
-                            ))}
-                        </ScrollView>
 
                         <View style={styles.imageScrollIndicator} />
 
@@ -189,84 +164,22 @@ export default function ProductAddform() {
                                         onChangeText={setProductTitle}
                                     />
                                 </View>
-                            </View>
-
-                            <View style={styles.row}>
-                                <View style={[styles.inputField, styles.halfWidth]}>
-                                    <Text style={styles.label}>Wholesale Price *</Text>
-                                    <View style={styles.priceInputContainer}>
-                                        <Text style={styles.currencyPrefix}>₹</Text>
-                                        <TextInput
-                                            style={styles.priceInput}
-                                            value={wholesalePrice}
-                                            onChangeText={setWholesalePrice}
-                                            keyboardType="numeric"
-                                            placeholder="0.00"
-                                            placeholderTextColor="#94A3B8"
-                                        />
-                                    </View>
-                                </View>
-                                <View style={[styles.inputField, styles.halfWidth]}>
-                                    <Text style={styles.label}>MRP *</Text>
-                                    <View style={styles.priceInputContainer}>
-                                        <Text style={styles.currencyPrefix}>₹</Text>
-                                        <TextInput
-                                            style={styles.priceInput}
-                                            value={mrp}
-                                            onChangeText={setMrp}
-                                            keyboardType="numeric"
-                                            placeholder="0.00"
-                                            placeholderTextColor="#94A3B8"
-                                        />
-                                    </View>
-                                </View>
-                            </View>
-
-                            <View style={styles.row}>
-                                <View style={[styles.inputField, styles.halfWidth]}>
-                                    <Text style={styles.label}>Stock</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        value={stock}
-                                        onChangeText={setStock}
-                                        keyboardType="numeric"
-                                        placeholder="0"
-                                        placeholderTextColor="#94A3B8"
-                                    />
-                                </View>
-                                <View style={[styles.inputField, styles.halfWidth]}>
-                                    <Text style={styles.label}>Unit</Text>
-                                    <TouchableOpacity style={styles.dropdownButton} onPress={() => openPicker('unit')}>
-                                        <Text style={unit ? styles.dropdownText : styles.dropdownPlaceholder}>
-                                            {unit || 'Select Unit'}
+                                <View style={styles.divider} />
+                                <View style={styles.inputFieldNoBorder}>
+                                    <Text style={styles.label}>Select Company *</Text>
+                                    <TouchableOpacity
+                                        style={styles.dropdownButton}
+                                        onPress={() => openPicker('company')}
+                                    >
+                                        <Text style={selectedCompany ? styles.dropdownText : styles.dropdownPlaceholder}>
+                                            {selectedCompany ? selectedCompany : 'Select Company'}
                                         </Text>
                                         <IconSymbol name="chevron.left" size={16} color="#94A3B8" style={{ transform: [{ rotate: '-90deg' }] }} />
                                     </TouchableOpacity>
                                 </View>
                             </View>
 
-                            <View style={styles.row}>
-                                <View style={[styles.inputField, styles.halfWidth]}>
-                                    <Text style={styles.label}>Quantity</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="e.g. 1L, 500g"
-                                        placeholderTextColor="#94A3B8"
-                                        value={quantity}
-                                        onChangeText={setQuantity}
-                                    />
-                                </View>
-                                <View style={[styles.inputField, styles.halfWidth]}>
-                                    <Text style={styles.label}>Color</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="e.g. Red, Blue"
-                                        placeholderTextColor="#94A3B8"
-                                        value={color}
-                                        onChangeText={setColor}
-                                    />
-                                </View>
-                            </View>
+
 
                             <View style={styles.row}>
                                 <View style={[styles.inputField, styles.halfWidth]}>
@@ -280,17 +193,7 @@ export default function ProductAddform() {
                                         placeholderTextColor="#94A3B8"
                                     />
                                 </View>
-                                <View style={[styles.inputField, styles.halfWidth]}>
-                                    <Text style={styles.label}>Company ID *</Text>
-                                    <TextInput
-                                        style={styles.input}
-                                        value={companyID}
-                                        onChangeText={setCompanyID}
-                                        keyboardType="numeric"
-                                        placeholder="Enter ID"
-                                        placeholderTextColor="#94A3B8"
-                                    />
-                                </View>
+
                             </View>
 
                             <View style={[styles.inputField, styles.multilineField]}>
@@ -334,7 +237,7 @@ export default function ProductAddform() {
                     </View>
                 </KeyboardAvoidingView>
 
-                {/* Unit Selection Modal */}
+                {/* Selection Modal */}
                 <Modal
                     animationType="slide"
                     transparent={true}
@@ -345,23 +248,40 @@ export default function ProductAddform() {
                         <View style={styles.modalOverlay}>
                             <View style={styles.modalContent}>
                                 <View style={styles.modalHeader}>
-                                    <Text style={styles.modalTitle}>Select Unit</Text>
+                                    <Text style={styles.modalTitle}>
+                                        {currentPickerField === 'unit' ? 'Select Unit' : 'Select Company'}
+                                    </Text>
                                     <TouchableOpacity onPress={() => setModalVisible(false)}>
                                         <IconSymbol name="xmark" size={24} color="#0F172A" />
                                     </TouchableOpacity>
                                 </View>
-                                <FlatList
-                                    data={UNIT_OPTIONS}
-                                    keyExtractor={(item) => item}
-                                    renderItem={({ item }) => (
-                                        <TouchableOpacity style={styles.modalItem} onPress={() => handleSelectOption(item)}>
-                                            <Text style={styles.modalItemText}>{item}</Text>
-                                            {unit === item && (
-                                                <IconSymbol name="checkmark" size={20} color="#2563EB" />
-                                            )}
-                                        </TouchableOpacity>
-                                    )}
-                                />
+                                {currentPickerField === 'unit' ? (
+                                    <FlatList
+                                        data={UNIT_OPTIONS}
+                                        keyExtractor={(item) => item}
+                                        renderItem={({ item }) => (
+                                            <TouchableOpacity style={styles.modalItem} onPress={() => handleSelectOption(item)}>
+                                                <Text style={styles.modalItemText}>{item}</Text>
+                                                {unit === item && (
+                                                    <IconSymbol name="checkmark" size={20} color="#2563EB" />
+                                                )}
+                                            </TouchableOpacity>
+                                        )}
+                                    />
+                                ) : (
+                                    <FlatList
+                                        data={Company_OPTIONS}
+                                        keyExtractor={(item) => item.CompanyID}
+                                        renderItem={({ item }) => (
+                                            <TouchableOpacity style={styles.modalItem} onPress={() => handleSelectOption(item)}>
+                                                <Text style={styles.modalItemText}>{item.CompanyName}</Text>
+                                                {selectedCompany === item && (
+                                                    <IconSymbol name="checkmark" size={20} color="#2563EB" />
+                                                )}
+                                            </TouchableOpacity>
+                                        )}
+                                    />
+                                )}
                             </View>
                         </View>
                     </TouchableWithoutFeedback>
@@ -647,5 +567,18 @@ const styles = StyleSheet.create({
     modalItemText: {
         fontSize: 16,
         color: '#0F172A',
+    },
+    modalItemSubtext: {
+        fontSize: 12,
+        color: '#64748B',
+        marginTop: 2,
+    },
+    emptyContainer: {
+        padding: 20,
+        alignItems: 'center',
+    },
+    emptyText: {
+        fontSize: 14,
+        color: '#94A3B8',
     },
 });
