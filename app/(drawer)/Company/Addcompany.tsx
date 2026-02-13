@@ -1,3 +1,4 @@
+import CompanyListSkeleton from '@/components/skeletons/CompanyListSkeleton';
 import { useGetcompanyQuery } from '@/services/features/company/companyApi';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
@@ -29,6 +30,10 @@ export default function ManageCompaniesScreen() {
     const navigation = useNavigation();
     const [searchQuery, setSearchQuery] = useState('');
     const { data: COMPANIES, isLoading, error } = useGetcompanyQuery();
+
+    if (isLoading) {
+        return <CompanyListSkeleton />;
+    }
 
     const renderCompanyItem = ({ item }: { item: typeof COMPANIES[0] }) => (
         <View style={styles.card}>

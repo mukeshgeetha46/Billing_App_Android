@@ -1,3 +1,4 @@
+import StoreListSkeleton from '@/components/skeletons/StoreListSkeleton';
 import { useGetstoreQuery } from '@/services/features/stores/storeApi';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
@@ -28,6 +29,10 @@ export default function StoreListScreen() {
     const navigation = useNavigation();
     const [searchQuery, setSearchQuery] = useState('');
     const { data: STORES, isLoading, error } = useGetstoreQuery();
+
+    if (isLoading) {
+        return <StoreListSkeleton />;
+    }
     const renderStoreItem = ({ item }: { item: typeof STORES[0] }) => (
         <View style={styles.card}>
             <View style={styles.cardInfo}>

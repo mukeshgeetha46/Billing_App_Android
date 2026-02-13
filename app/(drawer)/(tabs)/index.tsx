@@ -1,3 +1,4 @@
+import HomeSkeleton from '@/components/skeletons/HomeSkeleton';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useGetHomedataQuery } from '@/services/features/home/homeApi';
 import { useRouter } from 'expo-router';
@@ -20,7 +21,7 @@ export default function HomeScreen() {
 
 
   if (isLoading) {
-    return <Text style={{ textAlign: 'center', marginTop: 40 }}>Loading...</Text>;
+    return <HomeSkeleton />;
   }
 
   if (error) {

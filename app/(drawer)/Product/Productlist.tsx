@@ -2,6 +2,7 @@ import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 
+import ProductListSkeleton from '@/components/skeletons/ProductListSkeleton';
 import { useGetProductQuery } from '@/services/features/product/productApi';
 import {
     Dimensions,
@@ -50,11 +51,7 @@ export default function ProductListScreen() {
     };
 
     if (isLoading) {
-        return (
-            <SafeAreaView style={styles.container}>
-                <Text style={{ textAlign: 'center', marginTop: 50 }}>Loading...</Text>
-            </SafeAreaView>
-        );
+        return <ProductListSkeleton />;
     }
 
     if (error || !MOCK_PRODUCTS) {
