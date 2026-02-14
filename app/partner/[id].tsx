@@ -118,6 +118,8 @@ export default function PartnerCatalogScreen() {
                                 params: {
                                     id: item.id,
                                     color: item.color,
+                                    companyId: id,
+                                    companyName: "Example Company",
                                 },
                             });
                         }}

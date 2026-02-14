@@ -3,6 +3,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { persistReducer, persistStore } from 'redux-persist';
 import { baseApi } from "../services/baseApi";
 import authReducer from './slices/authSlice';
+import orderReducer from './slices/orderSlice';
 
 
 // Persist configuration
@@ -15,6 +16,7 @@ const persistConfig = {
 // Combine reducers
 const rootReducer = combineReducers({
     auth: authReducer,
+    order: orderReducer,
     [baseApi.reducerPath]: baseApi.reducer,
 });
 

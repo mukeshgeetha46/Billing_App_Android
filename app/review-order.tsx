@@ -1,73 +1,66 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useAddorderMutation } from '@/services/features/order/orderApi';
+import { useGetstoreQuery } from '@/services/features/stores/storeApi';
+import { selectCart } from '@/store/slices/orderSlice';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     Dimensions,
+    FlatList,
     Image,
+    Modal,
     ScrollView,
     StatusBar,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { useSelector } from 'react-redux';
 const { width } = Dimensions.get('window');
-
 // Mock cart data grouped by partner
-const CART_ITEMS = [
-    {
-        partnerId: '1',
-        partnerName: 'GLOBAL TECH DISTRIBUTING',
-        itemCount: 2,
-        moqStatus: 'MOQ Met',
-        moqColor: '#3B82F6',
-        items: [
-            {
-                id: '1',
-                name: 'Wireless Headphones X1',
-                variant: 'Space Gray',
-                sku: 'WH-X1-GR',
-                price: 1200.00,
-                quantity: 10,
-                image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60',
-            },
-            {
-                id: '2',
-                name: 'Bluetooth Speaker Pro',
-                variant: 'Blue',
-                sku: 'BS-PRO-BL',
-                price: 900.00,
-                quantity: 20,
-                image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&auto=format&fit=crop&q=60',
-            },
-        ],
-    },
-    {
-        partnerId: '2',
-        partnerName: 'APEX SUPPLY CO.',
-        itemCount: 1,
-        moqStatus: 'Under MOQ ($500)',
-        moqColor: '#F59E0B',
-        items: [
-            {
-                id: '3',
-                name: 'Ultra Laptop Stand',
-                variant: 'Silver',
-                sku: 'LS-ULTRA-S',
-                price: 240.00,
-                quantity: 8,
-                image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&auto=format&fit=crop&q=60',
-            },
-        ],
-    },
-];
+
 
 export default function ReviewOrderScreen() {
     const router = useRouter();
-    const [cartData, setCartData] = useState(CART_ITEMS);
+    const CART_ITEMS = useSelector(selectCart);
 
+    const [cartData, setCartData] = useState(CART_ITEMS);
+    const cartdata = useSelector((state) => state.order.cart);
+    const [addOrder] = useAddorderMutation();
+
+    // Store Selection State
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedStore, setSelectedStore] = useState<any>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const { data: storesData } = useGetstoreQuery(undefined);
+
+    const filteredStores = storesData?.filter((store: any) =>
+        store.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+    const Handleorder = async () => {
+        if (!selectedStore) {
+            alert('Please select a store first');
+            return;
+        }
+        try {
+            const convertedCart = {
+                shopId: selectedStore.id, // You'll need to specify which shop this is for
+                items: CART_ITEMS.flatMap(partner =>
+                    partner.items.map(item => ({
+                        variantId: parseInt(item.variant), // Using item.id as variantId (you may need to map this differently)
+                        quantity: item.quantity
+                    }))
+                )
+            };
+            console.log('🎁🎀🎗', convertedCart)
+            const response = await addOrder(convertedCart).unwrap();
+        } catch (error) {
+            console.log('error', error)
+        }
+    }
     // Calculate totals
     const subtotal = cartData.reduce((sum, partner) => {
         return sum + partner.items.reduce((itemSum, item) => itemSum + (item.price * item.quantity), 0);
@@ -104,7 +97,7 @@ export default function ReviewOrderScreen() {
             <Image source={{ uri: item.image }} style={styles.itemImage} />
             <View style={styles.itemDetails}>
                 <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
-                <Text style={styles.itemVariant}>Variant: {item.variant} | SKU: {item.sku}</Text>
+                <Text style={styles.itemVariant}>Variant: {item.variant} | SKU: {item.SKU}</Text>
                 <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
             </View>
             <View style={styles.quantityControls}>
@@ -207,14 +200,78 @@ export default function ReviewOrderScreen() {
                     <Text style={styles.totalLabel}>TOTAL TO PAY</Text>
                     <Text style={styles.totalValue}>${grandTotal.toFixed(2)}</Text>
                 </View>
-                <View style={styles.deliverySection}>
+                <TouchableOpacity
+                    style={styles.deliverySection}
+                    onPress={() => setModalVisible(true)}
+                >
                     <Text style={styles.deliveryLabel}>DELIVER TO</Text>
-                    <Text style={styles.deliveryValue}>Main Store Hub</Text>
-                </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Text style={styles.deliveryValue}>
+                            {selectedStore ? selectedStore.name : 'Select Store'}
+                        </Text>
+                        <IconSymbol name="chevron.down" size={14} color="#111827" />
+                    </View>
+                </TouchableOpacity>
             </View>
 
+            {/* Store Selection Modal */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Select Store</Text>
+                            <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                <IconSymbol name="xmark" size={24} color="#6B7280" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.searchContainer}>
+                            <IconSymbol name="magnifyingglass" size={20} color="#9CA3AF" />
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Search stores..."
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                            />
+                        </View>
+
+                        <FlatList
+                            data={filteredStores}
+                            keyExtractor={(item) => item.id.toString()}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={styles.storeOption}
+                                    onPress={() => {
+                                        setSelectedStore(item);
+                                        setModalVisible(false);
+                                    }}
+                                >
+                                    <View>
+                                        <Text style={styles.storeName}>{item.name}</Text>
+                                        {item.address && (
+                                            <Text style={styles.storeAddress}>{item.address}</Text>
+                                        )}
+                                    </View>
+                                    {selectedStore?.id === item.id && (
+                                        <IconSymbol name="checkmark" size={20} color="#2563EB" />
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                            ListEmptyComponent={
+                                <Text style={styles.emptyText}>No stores found</Text>
+                            }
+                        />
+                    </View>
+                </View>
+            </Modal>
+
             <View style={styles.placeOrderContainer}>
-                <TouchableOpacity style={styles.placeOrderButton}>
+                <TouchableOpacity style={styles.placeOrderButton} onPress={Handleorder}>
                     <Text style={styles.placeOrderText}>Place Order</Text>
                     <IconSymbol name="chevron.right" size={20} color="#FFF" />
                 </TouchableOpacity>
@@ -472,5 +529,66 @@ const styles = StyleSheet.create({
         color: '#9CA3AF',
         textAlign: 'center',
         marginTop: 8,
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#FFF',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        height: '70%',
+        padding: 16,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#111827',
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F3F4F6',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 48,
+        marginBottom: 16,
+        gap: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        color: '#111827',
+    },
+    storeOption: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    storeName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#111827',
+        marginBottom: 4,
+    },
+    storeAddress: {
+        fontSize: 12,
+        color: '#6B7280',
+    },
+    emptyText: {
+        textAlign: 'center',
+        color: '#6B7280',
+        marginTop: 20,
     },
 });

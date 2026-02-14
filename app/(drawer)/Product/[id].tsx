@@ -1,8 +1,10 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useGetProductByIdQuery } from '@/services/features/product/productApi';
+import { AddToCart } from '@/store/slices/orderSlice';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+    Alert,
     Dimensions,
     FlatList,
     Image,
@@ -10,11 +12,12 @@ import {
     StatusBar,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { useDispatch } from 'react-redux';
 const { width } = Dimensions.get('window');
 
 const COLORS = [
@@ -29,9 +32,9 @@ const COLORS = [
 
 
 export default function ProductViewScreen() {
-    const { id, color, VariantID } = useLocalSearchParams();
+    const { id, color, VariantID, companyId, companyName } = useLocalSearchParams();
     const routeColor = color;
-
+    const dispatch = useDispatch();
     const router = useRouter();
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
@@ -54,8 +57,6 @@ export default function ProductViewScreen() {
         );
 
     console.log({ id: id, color: selectedColor ?? routeColor, VariantID: VariantID })
-
-
     if (isLoading) {
         return (
             <View style={styles.container}>
@@ -71,6 +72,7 @@ export default function ProductViewScreen() {
             </View>
         );
     }
+
     const totalPrice = (PRODUCT_DATA.price * quantity).toFixed(2);
 
     const renderHeader = () => (
@@ -93,6 +95,39 @@ export default function ProductViewScreen() {
         const index = event.nativeEvent.contentOffset.x / slideSize;
         setActiveImageIndex(Math.round(index));
     };
+
+
+    const handleAddToCart = (item) => {
+
+        dispatch(AddToCart({
+            partnerId: companyId,
+            partnerName: companyName,
+            item: {
+                id: item.id,
+                name: item.name,
+                variant: item.VariantID,
+                sku: item.SKU,
+                price: item.price,
+                quantity: quantity, // Default quantity
+                image: item.images[0]
+            }
+        }));
+        console.log('add to cart 🧡💛💚', {
+            partnerId: companyId,
+            partnerName: companyName,
+            item: {
+                id: item.id,
+                name: item.name,
+                variant: item.VariantID,
+                sku: item.SKU,
+                price: item.price,
+                quantity: quantity, // Default quantity
+                image: item.images[0]
+            }
+        });
+        router.push(`/partner/${companyId}`)
+    };
+
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
@@ -216,20 +251,23 @@ export default function ProductViewScreen() {
                             <Text style={styles.bulkDiscountText}>Bulk discount at 50+</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={styles.stepperContainer}>
-                        <TouchableOpacity
-                            style={styles.stepperButton}
-                            onPress={() => setQuantity(Math.max(PRODUCT_DATA.minOrder, quantity - 1))}
-                        >
-                            <IconSymbol name="minus" size={20} color="#2563EB" />
-                        </TouchableOpacity>
-                        <Text style={styles.quantityValue}>{quantity}</Text>
-                        <TouchableOpacity
-                            style={styles.stepperButton}
-                            onPress={() => setQuantity(quantity + 1)}
-                        >
-                            <IconSymbol name="plus" size={20} color="#2563EB" />
-                        </TouchableOpacity>
+                    <View style={styles.quantityInputContainer}>
+                        <TextInput
+                            style={styles.quantityInput}
+                            value={quantity.toString()}
+                            keyboardType="numeric"
+                            onChangeText={(text) => {
+                                const newQuantity = parseInt(text) || 0;
+                                const availableStock = PRODUCT_DATA.stock || 50; // Fallback to 50 if stock is missing
+                                if (newQuantity > availableStock) {
+                                    Alert.alert('Stock Limit', `Only ${availableStock} items available in stock`);
+                                    setQuantity(availableStock);
+                                } else {
+                                    setQuantity(newQuantity);
+                                }
+                            }}
+                        />
+                        <Text style={styles.quantityLabel}>Available Stock: {PRODUCT_DATA.stock || 50}</Text>
                     </View>
 
                     <View style={styles.divider} />
@@ -271,7 +309,7 @@ export default function ProductViewScreen() {
                 </View>
                 <TouchableOpacity
                     style={styles.addToCartButton}
-                    onPress={() => router.push('/review-order')}
+                    onPress={() => handleAddToCart(PRODUCT_DATA)}
                 >
                     <IconSymbol name="cart.fill" size={20} color="#FFF" />
                     <Text style={styles.addToCartText}>Add to Cart</Text>
@@ -460,25 +498,27 @@ const styles = StyleSheet.create({
         color: '#2563EB',
         fontWeight: '500',
     },
-    stepperContainer: {
+    quantityInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F9FAFB',
-        borderRadius: 12,
-        padding: 4,
-        width: 150,
         justifyContent: 'space-between',
+        marginTop: 10,
     },
-    stepperButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    quantityValue: {
-        fontSize: 18,
-        fontWeight: '700',
+    quantityInput: {
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        width: '40%',
+        fontSize: 16,
         color: '#111827',
+        textAlign: 'center',
+    },
+    quantityLabel: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
     },
     descriptionText: {
         fontSize: 15,
