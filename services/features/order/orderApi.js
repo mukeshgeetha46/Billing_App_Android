@@ -10,6 +10,13 @@ export const orderApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ["Order"],
         }),
+        Getorder: builder.query({
+            query: () => ({
+                url: "/order/get",
+                method: "GET",
+            }),
+            providesTags: ["Order"],
+        }),
 
 
     }),
@@ -18,5 +25,5 @@ export const orderApi = baseApi.injectEndpoints({
 
 export const {
     useAddorderMutation,
-
+    useGetorderQuery,
 } = orderApi;

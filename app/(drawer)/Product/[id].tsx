@@ -1,6 +1,6 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useGetProductByIdQuery } from '@/services/features/product/productApi';
-import { AddToCart } from '@/store/slices/orderSlice';
+import { AddToCart, selectCart } from '@/store/slices/orderSlice';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -17,7 +17,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 const { width } = Dimensions.get('window');
 
 const COLORS = [
@@ -37,7 +37,13 @@ export default function ProductViewScreen() {
     const dispatch = useDispatch();
     const router = useRouter();
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
-
+    const CART_ITEMS = useSelector(selectCart);
+    const CART_ITEMS_COUNT = CART_ITEMS.flatMap(partner =>
+        partner.items.map(item => ({
+            variantId: parseInt(item.variant), // Using item.id as variantId (you may need to map this differently)
+            quantity: item.quantity
+        }))
+    );
     const [selectedSize, setSelectedSize] = useState('M');
     const [quantity, setQuantity] = useState(12);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -84,8 +90,18 @@ export default function ProductViewScreen() {
                 <IconSymbol name="chevron.left" size={24} color="#000" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Product Details</Text>
-            <TouchableOpacity style={styles.headerIconButton}>
-                <IconSymbol name="cart.fill" size={24} color="#000" />
+
+
+            <TouchableOpacity style={styles.headerIconButton} onPress={() => {
+                if (CART_ITEMS_COUNT.length === 0) {
+                    return;
+                }
+                router.push('/review-order')
+            }}>
+                <IconSymbol name="cart.fill" size={24} color="#111" />
+                {CART_ITEMS_COUNT.length > 0 && <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{CART_ITEMS_COUNT.length}</Text>
+                </View>}
             </TouchableOpacity>
         </View>
     );
@@ -323,6 +339,24 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFF',
+    },
+    badge: {
+        position: 'absolute',
+        top: -4,
+        right: -4,
+        backgroundColor: '#2563EB',
+        borderRadius: 10,
+        width: 18,
+        height: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#FFF',
+    },
+    badgeText: {
+        color: '#FFF',
+        fontSize: 10,
+        fontWeight: 'bold',
     },
     header: {
         flexDirection: 'row',

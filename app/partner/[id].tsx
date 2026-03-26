@@ -1,5 +1,6 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useGetCompanyProductsQuery } from '@/services/features/company/companyApi';
+import { selectCart } from '@/store/slices/orderSlice';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -14,6 +15,7 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSelector } from 'react-redux';
 
 
 const { width } = Dimensions.get('window');
@@ -41,6 +43,14 @@ export default function PartnerCatalogScreen() {
     const router = useRouter();
     const [activeCategory, setActiveCategory] = useState('All');
     const { data: PRODUCTS, isLoading, isError, error } = useGetCompanyProductsQuery(id);
+    const CART_ITEMS = useSelector(selectCart);
+    const CART_ITEMS_COUNT = CART_ITEMS.flatMap(partner =>
+        partner.items.map(item => ({
+            variantId: parseInt(item.variant), // Using item.id as variantId (you may need to map this differently)
+            quantity: item.quantity
+        }))
+    );
+
 
     if (isLoading) {
         return (
@@ -152,11 +162,16 @@ export default function PartnerCatalogScreen() {
            */}
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Acme Electronics</Text>
-                <TouchableOpacity style={styles.cartButton} onPress={() => router.push('/review-order')}>
+                <TouchableOpacity style={styles.cartButton} onPress={() => {
+                    if (CART_ITEMS_COUNT.length === 0) {
+                        return;
+                    }
+                    router.push('/review-order')
+                }}>
                     <IconSymbol name="cart.fill" size={24} color="#111" />
-                    <View style={styles.badge}>
-                        <Text style={styles.badgeText}>3</Text>
-                    </View>
+                    {CART_ITEMS_COUNT.length > 0 && <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{CART_ITEMS_COUNT.length}</Text>
+                    </View>}
                 </TouchableOpacity>
             </View>
 

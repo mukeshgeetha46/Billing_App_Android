@@ -19,7 +19,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { data: featuredPartners, isLoading, error } = useGetHomedataQuery();
 
-
+  console.log(error)
   if (isLoading) {
     return <HomeSkeleton />;
   }

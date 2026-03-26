@@ -1,7 +1,7 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAddorderMutation } from '@/services/features/order/orderApi';
 import { useGetstoreQuery } from '@/services/features/stores/storeApi';
-import { selectCart } from '@/store/slices/orderSlice';
+import { ClearCart, selectCart } from '@/store/slices/orderSlice';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -18,7 +18,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 const { width } = Dimensions.get('window');
 // Mock cart data grouped by partner
 
@@ -26,7 +26,7 @@ const { width } = Dimensions.get('window');
 export default function ReviewOrderScreen() {
     const router = useRouter();
     const CART_ITEMS = useSelector(selectCart);
-
+    const dispatch = useDispatch();
     const [cartData, setCartData] = useState(CART_ITEMS);
     const cartdata = useSelector((state) => state.order.cart);
     const [addOrder] = useAddorderMutation();
@@ -57,6 +57,8 @@ export default function ReviewOrderScreen() {
             };
             console.log('🎁🎀🎗', convertedCart)
             const response = await addOrder(convertedCart).unwrap();
+            dispatch(ClearCart());
+            router.push('/(drawer)/(tabs)');
         } catch (error) {
             console.log('error', error)
         }
